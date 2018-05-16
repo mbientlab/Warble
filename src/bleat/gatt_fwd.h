@@ -1,9 +1,9 @@
 #pragma once
 
 #ifdef __cplusplus
-struct MblBleatGatt;
+struct BleatGatt;
 #else
-typedef struct MblBleatGatt MblBleatGatt;
+typedef struct BleatGatt BleatGatt;
 #endif
 
-typedef void(*Void_VoidP_MblBleatGattP)(void* context, MblBleatGatt* caller);
+typedef void(*Void_VoidP_BleatGattP)(void* context, BleatGatt* caller);
