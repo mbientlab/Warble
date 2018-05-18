@@ -12,5 +12,5 @@ struct BleatGattChar {
 
     virtual void enable_notifications_async(void* context, Void_VoidP_BleatGattCharP handler) = 0;
     virtual void disable_notifications_async(void* context, Void_VoidP_BleatGattCharP handler) = 0;
-    virtual void set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte handler);
+    virtual void set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte handler) = 0;
 };

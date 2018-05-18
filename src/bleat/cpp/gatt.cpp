@@ -1,12 +1,14 @@
 #include "bleat/gatt.h"
 #include "gatt_def.h"
 
+#include "api_blepp.h"
+
 BleatGatt::~BleatGatt() {
 
 }
 
 BleatGatt* bleat_gatt_new(const char* mac) {
-    return nullptr;
+    return new BleatGatt_Blepp(mac);
 }
 
 void bleat_gatt_free(BleatGatt* obj) {

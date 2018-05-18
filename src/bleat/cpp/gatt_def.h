@@ -1,3 +1,5 @@
+#pragma once
+
 #include "bleat/gatt_fwd.h"
 #include "bleat/gattchar_fwd.h"
 

@@ -3,11 +3,7 @@
 include config.mk
 include project_version.mk
 
-EMPTY:=
-SPACE:= $(EMPTY) $(EMPTY)
-COMMA:=,
-
-CXXFLAGS:=-std=c++14 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -I$(SOURCE_DIR) -DBLEAT_DLL -DBLEAT_DLL_EXPORTS $(OPT_FLAGS)
+CXXFLAGS:=-std=c++14 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -DBLEAT_DLL -DBLEAT_DLL_EXPORTS -I$(SOURCE_DIR) 
 
 MODULES_SRC_DIR= $(addsuffix /cpp, $(addprefix $(SOURCE_DIR)/, $(MODULES)))
 SRCS:=$(foreach src_dir, $(MODULES_SRC_DIR), $(shell find $(src_dir) -name \*.cpp))
@@ -28,6 +24,7 @@ ifneq ($(KERNEL),Darwin)
     EXTENSION:=so
     LIB_SO_NAME:=lib$(APP_NAME).so
     LD_FLAGS:=$(LD_FLAGS)--soname
+    CXXFLAGS+= -Ideps/libblepp
 else
     EXTENSION:=dylib
     LD_FLAGS:=-dynamiclib $(LD_FLAGS)-install_name
