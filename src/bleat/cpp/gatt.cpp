@@ -15,7 +15,7 @@ void bleat_gatt_free(BleatGatt* obj) {
     delete obj;
 }
 
-void bleat_gatt_connect_async(BleatGatt* obj, void* context, Void_VoidP_BleatGattP handler) {
+void bleat_gatt_connect_async(BleatGatt* obj, void* context, Void_VoidP_BleatGattP_Uint handler) {
     obj->connect_async(context, handler);
 }
 
@@ -23,7 +23,7 @@ void bleat_gatt_disconnect(BleatGatt* obj) {
     obj->disconnect();
 }
 
-void bleat_gatt_on_disconnect(BleatGatt* obj, void* context, Void_VoidP_BleatGattP handler) {
+void bleat_gatt_on_disconnect(BleatGatt* obj, void* context, Void_VoidP_BleatGattP_Uint handler) {
     obj->on_disconnect(context, handler);
 }
 

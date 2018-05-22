@@ -5,6 +5,8 @@
 
 #include "blepp/blestatemachine.h"
 
+#include <condition_variable>
+#include <mutex>
 #include <thread>
 #include <unordered_map>
 
@@ -14,9 +16,9 @@ struct BleatGatt_Blepp : public BleatGatt {
     BleatGatt_Blepp(const char* mac);
     virtual ~BleatGatt_Blepp();
 
-    virtual void connect_async(void* context, Void_VoidP_BleatGattP handler);
+    virtual void connect_async(void* context, Void_VoidP_BleatGattP_Uint handler);
     virtual void disconnect();
-    virtual void on_disconnect(void* context, Void_VoidP_BleatGattP handler);
+    virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Uint handler);
 
     virtual BleatGattChar* find_characteristic(const std::string& uuid);
 
@@ -25,7 +27,7 @@ private:
     
     const char* mac;
     void *connect_context, *on_disconnect_context;
-    Void_VoidP_BleatGattP connect_handler, on_disconnect_handler;
+    Void_VoidP_BleatGattP_Uint connect_handler, on_disconnect_handler;
 
     BleatGattChar_Blepp* active_char;
     void* write_context;
@@ -34,8 +36,11 @@ private:
     BLEPP::BLEGATTStateMachine gatt;
     std::unordered_map<std::string, BleatGattChar_Blepp*> characteristics;
 
+    std::condition_variable state_machine_cv;
+    std::mutex cv_m;
+    std::unique_lock<std::mutex> cv_lock;
     std::thread blepp_state_machine;
-    bool state_machine_set;
+    bool terminate_state_machine;
 };
 
 struct BleatGattChar_Blepp : public BleatGattChar {

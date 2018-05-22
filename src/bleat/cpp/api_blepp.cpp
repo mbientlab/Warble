@@ -3,7 +3,9 @@
 #include "blepp/blestatemachine.h"
 #include "blepp/pretty_printers.h"
 
+#include <condition_variable>
 #include <fcntl.h>
+#include <mutex>
 #include <sys/time.h>
 #include <thread>
 #include <unistd.h>
@@ -14,16 +16,18 @@ using std::thread;
 using std::vector;
 using namespace BLEPP;
 
-static timeval connect_timeout = { 10, 0 };
-
-BleatGatt_Blepp::BleatGatt_Blepp(const char* mac) : mac(mac), state_machine_set(false) {
+BleatGatt_Blepp::BleatGatt_Blepp(const char* mac) : mac(mac), cv_lock(cv_m), terminate_state_machine(true) {
     log_level = Error;
         
     gatt.cb_connected = [this]() {
         gatt.read_primary_services();
     };
     gatt.cb_disconnected = [this](BLEGATTStateMachine::Disconnect d) {
-        on_disconnect_handler(on_disconnect_context, this);
+        auto copy = terminate_state_machine;
+        terminate_state_machine = true;
+        if (!copy) {
+            on_disconnect_handler(on_disconnect_context, this, d.error_code);
+        }
     };
     gatt.cb_find_characteristics = [this]() {
         gatt.get_client_characteristic_configuration();
@@ -38,11 +42,54 @@ BleatGatt_Blepp::BleatGatt_Blepp(const char* mac) : mac(mac), state_machine_set(
             }
         }
 
-        connect_handler(connect_context, this);
+        connect_handler(connect_context, this, BLEAT_GATT_STATUS_CONNECT_OK);
     };
     gatt.cb_write_response = [this]() {
         write_handler(write_context, active_char);
     };
+
+    thread th([this]() {
+        auto socket_select = [this](timeval* timeout) {
+            fd_set write_set, read_set;
+            FD_ZERO(&read_set);
+            FD_ZERO(&write_set);
+
+            FD_SET(gatt.socket(), &read_set);
+            if(gatt.wait_on_write()) {
+                FD_SET(gatt.socket(), &write_set);
+            }
+
+            int status = select(gatt.socket() + 1, &read_set, &write_set, nullptr, timeout);
+            if (status > 0) {
+                if(FD_ISSET(gatt.socket(), &write_set)) {
+                    gatt.write_and_process_next();
+                }
+
+                if(FD_ISSET(gatt.socket(), &read_set)) {
+                    gatt.read_and_process_next();
+                }
+            }
+
+            return status;
+        };
+
+        while(true) {
+            state_machine_cv.wait(cv_lock, [this] { return gatt.socket() != -1; });
+
+            timeval connect_timeout = { 10, 0 };
+            int status = socket_select(&connect_timeout);
+            if (status <= 0) {
+                terminate_state_machine = true;
+                gatt.close();
+                connect_handler(connect_context, this,  BLEAT_GATT_STATUS_CONNECT_TIMEOUT);
+            } else {
+                terminate_state_machine = false;
+                while(!terminate_state_machine && socket_select(nullptr) > 0) {
+                }
+            }
+        }
+    });
+    swap(blepp_state_machine, th);
 }
 
 BleatGatt_Blepp::~BleatGatt_Blepp() {
@@ -53,54 +100,18 @@ BleatGatt_Blepp::~BleatGatt_Blepp() {
     }
 }
 
-void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP handler) {
+void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_Uint handler) {
     connect_context = context;
     connect_handler = handler;
-
-    if (!state_machine_set) {
-        thread th([this]() {
-            gatt.connect(mac, false, false);
-
-            fd_set write_set, read_set;
-            timeval* timeout = &connect_timeout;
-
-            while(true) {
-                FD_ZERO(&read_set);
-                FD_ZERO(&write_set);
-
-                FD_SET(gatt.socket(), &read_set);
-                if(gatt.wait_on_write()) {
-                    FD_SET(gatt.socket(), &write_set);
-                }
-
-                if (!select(gatt.socket() + 1, &read_set, &write_set, nullptr, timeout)) {
-                    state_machine_set = false;
-                    gatt.close();
-                    connect_handler(connect_context, this);
-                    break;
-                }
-
-                if(FD_ISSET(gatt.socket(), &write_set)) {
-                    gatt.write_and_process_next();
-                }
-
-                if(FD_ISSET(gatt.socket(), &read_set)) {
-                    gatt.read_and_process_next();
-                }
-
-                timeout = nullptr;
-                state_machine_set = true;
-            }
-        });
-        swap(blepp_state_machine, th);
-    }
+    gatt.connect(mac, false, false);
+    state_machine_cv.notify_all();
 }
 
 void BleatGatt_Blepp::disconnect() {
     gatt.close();
 }
 
-void BleatGatt_Blepp::on_disconnect(void* context, Void_VoidP_BleatGattP handler) {
+void BleatGatt_Blepp::on_disconnect(void* context, Void_VoidP_BleatGattP_Uint handler) {
     on_disconnect_context = context;
     on_disconnect_handler = handler;
 }
