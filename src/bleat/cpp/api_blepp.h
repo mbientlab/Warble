@@ -13,7 +13,7 @@
 struct BleatGattChar_Blepp;
 
 struct BleatGatt_Blepp : public BleatGatt {
-    BleatGatt_Blepp(const char* mac);
+    BleatGatt_Blepp(int nopts, const BleatGattOption* opts);
     virtual ~BleatGatt_Blepp();
 
     virtual void connect_async(void* context, Void_VoidP_BleatGattP_Uint handler);
@@ -25,7 +25,8 @@ struct BleatGatt_Blepp : public BleatGatt {
 private:
     friend BleatGattChar_Blepp;
     
-    const char* mac;
+    const char *mac, *device;
+
     void *connect_context, *on_disconnect_context;
     Void_VoidP_BleatGattP_Uint connect_handler, on_disconnect_handler;
 

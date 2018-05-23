@@ -6,19 +6,45 @@
 #include <condition_variable>
 #include <fcntl.h>
 #include <mutex>
+#include <stdexcept>
 #include <sys/time.h>
 #include <thread>
 #include <unistd.h>
+#include <unordered_map>
 
-using std::function;
-using std::swap;
-using std::thread;
-using std::vector;
+using namespace std;
 using namespace BLEPP;
 
-BleatGatt_Blepp::BleatGatt_Blepp(const char* mac) : mac(mac), cv_lock(cv_m), terminate_state_machine(true) {
-    log_level = Error;
-        
+BleatGatt_Blepp::BleatGatt_Blepp(int nopts, const BleatGattOption* opts) : mac(nullptr), device(nullptr), cv_lock(cv_m), terminate_state_machine(true) {
+    unordered_map<string, function<void(const char*)>> arg_processors = {
+        {"mac", [this](const char* value) { mac = value; }}, 
+        {"hci", [this](const char* value) { device = value; }},
+        {"log-level", [this](const char* value) {
+            if (!strcmp(value, "error")) {
+                log_level = Error;
+            } else if (!strcmp(value, "warning")) {
+                log_level = Warning;
+            } else if (!strcmp(value, "info")) {
+                log_level = Info;
+            } else if (!strcmp(value, "debug")) {
+                log_level = Debug;
+            } else if (!strcmp(value, "trace")) {
+                log_level = Trace;
+            }
+        }}
+    };
+
+    for(int i = 0; i < nopts; i++) {
+        auto it = arg_processors.find(opts[i].key);
+        if (it == arg_processors.end()) {
+            throw runtime_error(string("option '") + opts[i].key + "' does not exist");
+        }
+        (it->second)(opts[i].value);
+    }
+    if (mac == nullptr) {
+        throw runtime_error("option 'mac' was not set");
+    }
+
     gatt.cb_connected = [this]() {
         gatt.read_primary_services();
     };
@@ -81,7 +107,7 @@ BleatGatt_Blepp::BleatGatt_Blepp(const char* mac) : mac(mac), cv_lock(cv_m), ter
             if (status <= 0) {
                 terminate_state_machine = true;
                 gatt.close();
-                connect_handler(connect_context, this,  BLEAT_GATT_STATUS_CONNECT_TIMEOUT);
+                connect_handler(connect_context, this, status == 0 ? BLEAT_GATT_STATUS_CONNECT_TIMEOUT : BLEAT_GATT_STATUS_CONNECT_GATT_ERROR);
             } else {
                 terminate_state_machine = false;
                 while(!terminate_state_machine && socket_select(nullptr) > 0) {
@@ -103,7 +129,7 @@ BleatGatt_Blepp::~BleatGatt_Blepp() {
 void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_Uint handler) {
     connect_context = context;
     connect_handler = handler;
-    gatt.connect(mac, false, false);
+    gatt.connect(mac, false, false, device == nullptr ? "" : device);
     state_machine_cv.notify_all();
 }
 

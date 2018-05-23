@@ -8,7 +8,14 @@ BleatGatt::~BleatGatt() {
 }
 
 BleatGatt* bleat_gatt_new(const char* mac) {
-    return new BleatGatt_Blepp(mac);
+    BleatGattOption opts[] = {
+        {"mac", mac}
+    };
+    return bleat_gatt_new_with_config(1, opts);
+}
+
+BleatGatt* bleat_gatt_new_with_config(int nopts, const BleatGattOption* opts) {
+    return new BleatGatt_Blepp(nopts, opts);
 }
 
 void bleat_gatt_free(BleatGatt* obj) {
