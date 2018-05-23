@@ -1,0 +1,4 @@
+/build/
+/dist/
+src/bleat/cpp/lib_def.h
+version.mk

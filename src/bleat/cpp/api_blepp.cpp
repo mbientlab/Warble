@@ -5,7 +5,6 @@
 
 #include <condition_variable>
 #include <fcntl.h>
-#include <mutex>
 #include <stdexcept>
 #include <sys/time.h>
 #include <thread>

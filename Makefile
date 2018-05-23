@@ -1,11 +1,13 @@
 .PHONY: build clean doc publish install
 
+$(shell ./bin/generate_version.sh)
 include config.mk
-include project_version.mk
+include version.mk
 
 CXXFLAGS:=-std=c++14 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -DBLEAT_DLL -DBLEAT_DLL_EXPORTS -I$(SOURCE_DIR) 
 
 MODULES_SRC_DIR= $(addsuffix /cpp, $(addprefix $(SOURCE_DIR)/, $(MODULES)))
+GEN:=
 SRCS:=$(foreach src_dir, $(MODULES_SRC_DIR), $(shell find $(src_dir) -name \*.cpp))
 EXPORT_HEADERS:=$(foreach module, $(addprefix $(SOURCE_DIR)/, $(MODULES)), $(shell find $(module) -maxdepth 1 -name \*.h))
 
@@ -61,6 +63,7 @@ build: $(MODULES_BUILD_DIR) $(REAL_DIST_DIR) $(APP_OUTPUT)
 $(REAL_BUILD_DIR)/%.o: %.cpp
 	$(CXX) -MMD -MP -MF "$(@:%.o=%.d)" -c -o $@ $(CXXFLAGS) $<
 
+include $(addsuffix /config.mk, $(MODULES_SRC_DIR))
 -include $(DEPS)
 
 $(MODULES_BUILD_DIR):
@@ -87,7 +90,7 @@ $(BUILD_DIR)/$(PUBLISH_NAME): build
 	tar -rf $@ -C $(DIST_DIR) .
 
 clean:
-	rm -Rf $(BUILD_DIR) $(DIST_DIR)
+	rm -Rf $(BUILD_DIR) $(DIST_DIR) $(GEN)
 
 doc:
 	rm -Rf $(DOC_DIR)
