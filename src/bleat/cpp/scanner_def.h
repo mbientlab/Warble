@@ -1,3 +1,7 @@
+/**
+ * @copyright MbientLab License
+ */
+
 #pragma once
 
 #include "bleat/scan_result.h"

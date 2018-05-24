@@ -1,3 +1,8 @@
+/**
+ * @copyright MbientLab License
+ * @file dllmarker.h
+ * @brief Macros for identifying exported functions
+ */
 #pragma once
 
 #if defined _WIN32 || defined __CYGWIN__

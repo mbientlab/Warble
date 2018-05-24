@@ -1,3 +1,7 @@
+/**
+ * @copyright MbientLab License
+ */
+
 #include "bleat/lib.h"
 #include "lib_def.h"
 

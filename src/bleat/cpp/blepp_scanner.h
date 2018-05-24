@@ -1,3 +1,8 @@
+/**
+ * @copyright MbientLab License
+ */
+#pragma once
+
 #include "scanner_def.h"
 
 #include "blepp/blestatemachine.h"

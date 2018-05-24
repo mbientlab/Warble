@@ -1,3 +1,8 @@
+/**
+ * @copyright MbientLab License
+ * @file scan_result.h
+ * @brief Types for ble scan results
+ */
 #pragma once
 
 #include "types.h"

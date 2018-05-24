@@ -1,3 +1,6 @@
+/**
+ * @copyright MbientLab License
+ */
 #include "api_blepp.h"
 
 #include "blepp/blestatemachine.h"

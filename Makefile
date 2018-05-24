@@ -1,3 +1,5 @@
+# @copyright MbientLab License
+
 .PHONY: build clean doc publish install
 
 $(shell ./bin/generate_version.sh)

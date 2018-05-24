@@ -1,3 +1,8 @@
+/**
+ * @copyright MbientLab License
+ * @file lib.h
+ * @brief Bleat library attributes
+ */
 #pragma once
 
 #include "dllmarker.h"

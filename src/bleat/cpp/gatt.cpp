@@ -1,3 +1,7 @@
+/**
+ * @copyright MbientLab License
+ */
+
 #include "bleat/gatt.h"
 #include "gatt_def.h"
 

@@ -1,3 +1,8 @@
+/**
+ * @copyright MbientLab License
+ * @file gatt_fwd.h
+ * @brief Type declarations for the BleatGatt functions
+ */
 #pragma once
 
 #include "types.h"

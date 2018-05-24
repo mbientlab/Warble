@@ -1,3 +1,8 @@
+/**
+ * @copyright MbientLab License
+ * @file types.h
+ * @brief Macros for defining variable types compatible with C and C++ compilers  
+ */
 #pragma once
 
 #ifdef __cplusplus

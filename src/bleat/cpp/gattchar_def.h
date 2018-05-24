@@ -1,3 +1,6 @@
+/**
+ * @copyright MbientLab License
+ */
 #pragma once
 
 #include "bleat/gattchar_fwd.h"

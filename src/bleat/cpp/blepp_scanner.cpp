@@ -4,6 +4,9 @@
 #include <unistd.h>
 
 using namespace std;
+/**
+ * @copyright MbientLab License
+ */
 using namespace BLEPP;
 
 BleatScanner_Blepp::BleatScanner_Blepp() : scanner(false, HCIScanner::FilterDuplicates::Off, HCIScanner::ScanType::Active), cv_lock(cv_m) {

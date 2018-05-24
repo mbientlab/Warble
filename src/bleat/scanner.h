@@ -1,3 +1,8 @@
+/**
+ * @copyright MbientLab License
+ * @file scanner.h
+ * @brief BLE device scanning functions
+ */
 #pragma once
 
 #include "dllmarker.h"

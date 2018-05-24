@@ -1,3 +1,7 @@
+/**
+ * @copyright MbientLab License
+ */
+
 #include "scanner_def.h"
 #include "bleat/scanner.h"
 

@@ -1,3 +1,5 @@
+# @copyright MbientLab License
+
 APP_NAME?=bleat
 MODULES?=bleat
 

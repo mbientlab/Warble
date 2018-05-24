@@ -1,3 +1,8 @@
+/**
+ * @copyright MbientLab License
+ * @file gattchar.h
+ * @brief Bleat gatt characteristic functions
+ */
 #pragma once
 
 #include "dllmarker.h"

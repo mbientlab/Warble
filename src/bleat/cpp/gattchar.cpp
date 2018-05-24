@@ -1,3 +1,7 @@
+/**
+ * @copyright MbientLab License
+ */
+
 #include "bleat/gattchar.h"
 #include "gattchar_def.h"
 
