@@ -158,14 +158,14 @@ BleatGattChar_Blepp::~BleatGattChar_Blepp() {
 
 }
 
-void BleatGattChar_Blepp::write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP handler) {
+void BleatGattChar_Blepp::write_async(const UBYTE* value, UBYTE len, void* context, Void_VoidP_BleatGattCharP handler) {
     owner->active_char = this;
     owner->write_context = context;
     owner->write_handler = handler;
     ble_char.write_request(value, len);
 }
 
-void BleatGattChar_Blepp::write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP handler) {
+void BleatGattChar_Blepp::write_without_resp_async(const UBYTE* value, UBYTE len, void* context, Void_VoidP_BleatGattCharP handler) {
     ble_char.write_command(value, len);
     handler(context, this);
 }
