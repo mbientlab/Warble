@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef API_win10
+
 #include "scanner_def.h"
 
 #include <cstdint>
@@ -22,3 +24,5 @@ private:
     std::unordered_map<std::uint64_t, std::string> seen_devices;
     Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher^ watcher;
 };
+
+#endif

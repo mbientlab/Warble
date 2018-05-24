@@ -1,5 +1,7 @@
 #include "win10_scanner.h"
 
+#ifdef API_WIN10
+
 #include <collection.h>
 #include <stdio.h>  
 #include <wrl/wrappers/corewrappers.h>
@@ -79,3 +81,5 @@ void BleatScanner_Win10::start() {
 void BleatScanner_Win10::stop() {
     watcher->Stop();
 }
+
+#endif

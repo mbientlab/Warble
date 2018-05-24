@@ -19,9 +19,7 @@ ifndef MACHINE
 endif
 
 
-DOC_DIR=doc
-
-SOURCE_DIR?=src
+DOC_DIR?=doc
 BUILD_DIR?=build
 DIST_DIR?=dist
 CONFIG?=release

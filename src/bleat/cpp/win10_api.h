@@ -3,6 +3,8 @@
  */
 #pragma once
 
+#ifdef API_WIN10
+
 #include "gatt_def.h"
 #include "gattchar_def.h"
 
@@ -76,3 +78,5 @@ private:
     Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic^ characteristic;
     Windows::Foundation::EventRegistrationToken cookie;
 };
+
+#endif

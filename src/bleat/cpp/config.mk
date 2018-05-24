@@ -1,5 +1,5 @@
 # @copyright MbientLab License
-M_DIR:=$(SOURCE_DIR)/bleat
+M_DIR:=src/bleat
 GEN:= $(GEN) $(M_DIR)/cpp/lib_def.h
 
 $(M_DIR)/cpp/lib.cpp: $(M_DIR)/cpp/lib_def.h

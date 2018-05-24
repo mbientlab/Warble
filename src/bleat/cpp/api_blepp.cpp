@@ -3,6 +3,8 @@
  */
 #include "api_blepp.h"
 
+#ifdef API_BLEPP
+
 #include "blepp/blestatemachine.h"
 #include "blepp/pretty_printers.h"
 
@@ -161,14 +163,14 @@ BleatGattChar_Blepp::~BleatGattChar_Blepp() {
 
 }
 
-void BleatGattChar_Blepp::write_async(const UBYTE* value, UBYTE len, void* context, Void_VoidP_BleatGattCharP handler) {
+void BleatGattChar_Blepp::write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP handler) {
     owner->active_char = this;
     owner->write_context = context;
     owner->write_handler = handler;
     ble_char.write_request(value, len);
 }
 
-void BleatGattChar_Blepp::write_without_resp_async(const UBYTE* value, UBYTE len, void* context, Void_VoidP_BleatGattCharP handler) {
+void BleatGattChar_Blepp::write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP handler) {
     ble_char.write_command(value, len);
     handler(context, this);
 }
@@ -197,3 +199,5 @@ void BleatGattChar_Blepp::set_value_changed_handler(void* context, Void_VoidP_Bl
     value_changed_context = context;
     value_changed_handler = handler;
 }
+
+#endif

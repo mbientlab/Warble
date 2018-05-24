@@ -3,6 +3,8 @@
  */
 #pragma once
 
+#ifdef API_BLEPP
+
 #include "scanner_def.h"
 
 #include "blepp/blestatemachine.h"
@@ -35,3 +37,5 @@ private:
     std::unique_lock<std::mutex> cv_lock;
     bool terminate_scan;
 };
+
+#endif

@@ -1,5 +1,6 @@
 #include "win10_api.h"
-#include "win10_scanner.h"
+
+#ifdef API_win10
 
 #include <collection.h>
 #include <cstring>
@@ -203,3 +204,5 @@ void BleatGattChar_Win10::set_value_changed_handler(void* context, Void_VoidP_Bl
         handler(context, this, (uint8_t*)wrapper->Data, wrapper->Length);
     });
 }
+
+#endif

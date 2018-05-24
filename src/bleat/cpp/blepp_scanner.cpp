@@ -1,5 +1,7 @@
 #include "blepp_scanner.h"
 
+#ifdef API_BLEPP
+
 #include <cstdint>
 #include <unistd.h>
 
@@ -91,3 +93,5 @@ void BleatScanner_Blepp::stop() {
     scanner.stop();
     terminate_scan = true;
 }
+
+#endif

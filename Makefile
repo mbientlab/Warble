@@ -6,12 +6,12 @@ $(shell ./bin/generate_version.sh)
 include config.mk
 include version.mk
 
-CXXFLAGS:=-std=c++14 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -DBLEAT_DLL -DBLEAT_DLL_EXPORTS -I$(SOURCE_DIR) 
+CXXFLAGS:=-std=c++14 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -DBLEAT_DLL -DBLEAT_DLL_EXPORTS -Isrc 
 
-MODULES_SRC_DIR= $(addsuffix /cpp, $(addprefix $(SOURCE_DIR)/, $(MODULES)))
+MODULES_SRC_DIR= $(addsuffix /cpp, $(addprefix src/, $(MODULES)))
 GEN:=
 SRCS:=$(foreach src_dir, $(MODULES_SRC_DIR), $(shell find $(src_dir) -name \*.cpp))
-EXPORT_HEADERS:=$(foreach module, $(addprefix $(SOURCE_DIR)/, $(MODULES)), $(shell find $(module) -maxdepth 1 -name \*.h))
+EXPORT_HEADERS:=$(foreach module, $(addprefix src/, $(MODULES)), $(shell find $(module) -maxdepth 1 -name \*.h))
 
 ifeq ($(CONFIG),debug)
     CXXFLAGS+=-g
@@ -28,7 +28,7 @@ ifneq ($(KERNEL),Darwin)
     EXTENSION:=so
     LIB_SO_NAME:=lib$(APP_NAME).so
     LD_FLAGS:=$(LD_FLAGS)--soname
-    CXXFLAGS+= -Ideps/libblepp
+    CXXFLAGS+= -DAPI_BLEPP -Ideps/libblepp
 else
     EXTENSION:=dylib
     LD_FLAGS:=-dynamiclib $(LD_FLAGS)-install_name
@@ -88,7 +88,7 @@ $(DIST_DIR)/$(PUBLISH_NAME_ZIP): $(BUILD_DIR)/$(PUBLISH_NAME)
 	gzip --stdout $< > $@
 
 $(BUILD_DIR)/$(PUBLISH_NAME): build
-	tar -cf $@ --transform 's,$(SOURCE_DIR),include,' $(EXPORT_HEADERS)
+	tar -cf $@ --transform 's,src,include,' $(EXPORT_HEADERS)
 	tar -rf $@ -C $(DIST_DIR) .
 
 clean:
