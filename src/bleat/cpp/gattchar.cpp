@@ -5,15 +5,17 @@
 #include "bleat/gattchar.h"
 #include "gattchar_def.h"
 
+using std::uint8_t;
+
 BleatGattChar::~BleatGattChar() {
 
 }
 
-void bleat_gattchar_write_async(BleatGattChar* obj, const UBYTE* value, UBYTE len, void* context, Void_VoidP_BleatGattCharP handler) {
+void bleat_gattchar_write_async(BleatGattChar* obj, const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP handler) {
     obj->write_async(value, len, context, handler);
 }
 
-void bleat_gattchar_write_without_resp_async(BleatGattChar* obj, const UBYTE* value, UBYTE len, void* context, Void_VoidP_BleatGattCharP handler) {
+void bleat_gattchar_write_without_resp_async(BleatGattChar* obj, const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP handler) {
     obj->write_without_resp_async(value, len, context, handler);
 }
 

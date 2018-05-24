@@ -5,7 +5,13 @@
 #include "bleat/gatt.h"
 #include "gatt_def.h"
 
+#ifdef API_BLEPP
 #include "api_blepp.h"
+#define BLEAT_GATT_IMPL BleatGatt_Blepp
+#elif API_WIN10
+#include "win10_api.h"
+#define BLEAT_GATT_IMPL BleatGatt_Win10
+#endif
 
 BleatGatt::~BleatGatt() {
 
@@ -18,8 +24,8 @@ BleatGatt* bleat_gatt_new(const char* mac) {
     return bleat_gatt_new_with_config(1, opts);
 }
 
-BleatGatt* bleat_gatt_new_with_config(int nopts, const BleatGattOption* opts) {
-    return new BleatGatt_Blepp(nopts, opts);
+BleatGatt* bleat_gatt_new_with_config(BLEAT_INT nopts, const BleatGattOption* opts) {
+    return new BLEAT_GATT_IMPL(nopts, opts);
 }
 
 void bleat_gatt_free(BleatGatt* obj) {

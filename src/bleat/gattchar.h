@@ -13,8 +13,8 @@
 extern "C" {
 #endif
 
-BLEAT_API void bleat_gattchar_write_async(BleatGattChar* obj, const UBYTE* value, UBYTE len, void* context, Void_VoidP_BleatGattCharP handler);
-BLEAT_API void bleat_gattchar_write_without_resp_async(BleatGattChar* obj, const UBYTE* value, UBYTE len, void* context, Void_VoidP_BleatGattCharP handler);
+BLEAT_API void bleat_gattchar_write_async(BleatGattChar* obj, const BLEAT_UBYTE* value, BLEAT_UBYTE len, void* context, Void_VoidP_BleatGattCharP handler);
+BLEAT_API void bleat_gattchar_write_without_resp_async(BleatGattChar* obj, const BLEAT_UBYTE* value, BLEAT_UBYTE len, void* context, Void_VoidP_BleatGattCharP handler);
 
 BLEAT_API void bleat_gattchar_read_async(BleatGattChar* obj, void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte handler);
 

@@ -17,7 +17,7 @@ struct BleatGatt;
 typedef struct BleatGatt BleatGatt;
 #endif
 
-typedef void(*Void_VoidP_BleatGattP_Uint)(void* context, BleatGatt* caller, UINT value);
+typedef void(*Void_VoidP_BleatGattP_Uint)(void* context, BleatGatt* caller, BLEAT_UINT value);
 
 typedef struct {
     const char* key;
