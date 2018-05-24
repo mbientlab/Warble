@@ -40,8 +40,10 @@ private:
 
     const char* mac;
 
-    void *connect_context, *on_disconnect_context;
-    Void_VoidP_BleatGattP_Uint connect_handler, on_disconnect_handler;
+    void *on_disconnect_context;
+    Void_VoidP_BleatGattP_Uint on_disconnect_handler;
+    
+    concurrency::task<void> discover_task, connect_task;
 
     Windows::Devices::Bluetooth::BluetoothLEDevice^ device;
     Windows::Foundation::EventRegistrationToken cookie;

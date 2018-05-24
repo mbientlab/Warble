@@ -1,11 +1,12 @@
 #include "win10_api.h"
 
-#ifdef API_win10
+#ifdef API_WIN10
 
 #include <collection.h>
 #include <cstring>
 #include <functional>
 #include <pplawait.h>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -22,7 +23,7 @@ using namespace Windows::Security::Cryptography;
 using namespace Platform;
 
 BleatGatt_Win10::BleatGatt_Win10(int nopts, const BleatGattOption* opts) : 
-        mac(nullptr), device(nullptr), connect_context(nullptr), on_disconnect_context(nullptr), connect_handler(nullptr), on_disconnect_handler(nullptr) {
+        mac(nullptr), device(nullptr), on_disconnect_context(nullptr), on_disconnect_handler(nullptr) {
     unordered_map<string, function<void(const char*)>> arg_processors = {
         { "mac", [this](const char* value) {mac = value; } }
     };
@@ -46,10 +47,9 @@ BleatGatt_Win10::~BleatGatt_Win10() {
 #include <iostream>
 
 void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_Uint handler) {
-    connect_context = context;
-    connect_handler = handler;
-
     task_completion_event<void> discover_device_event;
+    task<void> event_set(discover_device_event);
+
     if (device != nullptr) {
         discover_device_event.set();
     } else {
@@ -61,8 +61,8 @@ void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_Uint ha
         mac_copy.erase(10, 1);
 
         size_t temp;
-        uint64_t mac_ulong = stoul(mac_copy.c_str(), &temp, 16);
-        create_task(BluetoothLEDevice::FromBluetoothAddressAsync(mac_ulong)).then([&discover_device_event, this](BluetoothLEDevice^ device) {
+        uint64_t mac_ulong = stoull(mac_copy.c_str(), &temp, 16);
+        discover_task = create_task(BluetoothLEDevice::FromBluetoothAddressAsync(mac_ulong)).then([discover_device_event, this](BluetoothLEDevice^ device) {
             cookie = device->ConnectionStatusChanged += ref new TypedEventHandler<BluetoothLEDevice^, Object^>([this](BluetoothLEDevice^ sender, Object^ args) {
                 switch (sender->ConnectionStatus) {
                 case BluetoothConnectionStatus::Disconnected:
@@ -76,7 +76,7 @@ void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_Uint ha
 
             this->device = device;
             discover_device_event.set();
-        }).then([&discover_device_event](task<void> previous_task) {
+        }).then([discover_device_event](task<void> previous_task) {
             try {
                 previous_task.get();
             } catch (...) {
@@ -85,7 +85,7 @@ void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_Uint ha
         });
     }
 
-    create_task(discover_device_event).then([this]() {
+    connect_task = event_set.then([this]() {
         return create_task(device->GetGattServicesAsync());
     }).then([](GattDeviceServicesResult^ result) {
         vector<task<GattCharacteristicsResult^>> find_gattchar_tasks;
@@ -109,12 +109,12 @@ void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_Uint ha
                 throw runtime_error("Failed to discover gatt characteristics");
             }
         }
-    }).then([this](task<void> previous) {
+    }).then([this, handler, context](task<void> previous) {
         try {
             previous.wait();
-            connect_handler(connect_context, this, BLEAT_GATT_STATUS_CONNECT_OK);
+            handler(context, this, BLEAT_GATT_STATUS_CONNECT_OK);
         } catch (const exception&) {
-            connect_handler(connect_context, this, BLEAT_GATT_STATUS_CONNECT_GATT_ERROR);
+            handler(context, this, BLEAT_GATT_STATUS_CONNECT_GATT_ERROR);
         }
     });
 }
@@ -144,7 +144,10 @@ void BleatGatt_Win10::on_disconnect(void* context, Void_VoidP_BleatGattP_Uint ha
 
 BleatGattChar* BleatGatt_Win10::find_characteristic(const std::string& uuid) {
     wstring wide_uuid(uuid.begin(), uuid.end());
-    auto casted = ref new Platform::String(wide_uuid.c_str());
+    wstringstream stream;
+    stream << L'{' << wide_uuid << L'}';
+
+    auto casted = ref new Platform::String(stream.str().c_str());
     GUID rawguid;
     HRESULT hr = IIDFromString(casted->Data(), &rawguid);
 

@@ -60,6 +60,7 @@
     <ClInclude Include="..\src\bleat\cpp\win10_scanner.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="$(LibDef)" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\bleat\cpp\gatt.cpp">

@@ -9,7 +9,10 @@
 #include "blepp_scanner.h"
 static BleatScanner_Blepp scanner;
 #elif API_WIN10
+#include <wrl/wrappers/corewrappers.h>
 #include "win10_scanner.h"
+
+static Microsoft::WRL::Wrappers::RoInitializeWrapper initialize(RO_INIT_MULTITHREADED);
 static BleatScanner_Win10 scanner;
 #endif
 

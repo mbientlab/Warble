@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef API_win10
+#ifdef API_WIN10
 
 #include "scanner_def.h"
 
