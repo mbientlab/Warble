@@ -11,7 +11,7 @@
 struct BleatGatt {
     virtual ~BleatGatt() = 0;
 
-    virtual void connect_async(void* context, Void_VoidP_BleatGattP_Uint handler) = 0;
+    virtual void connect_async(void* context, Void_VoidP_BleatGattP_CharP handler) = 0;
     virtual void disconnect() = 0;
     virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Uint handler) = 0;
 

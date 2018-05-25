@@ -32,7 +32,7 @@ void bleat_gatt_free(BleatGatt* obj) {
     delete obj;
 }
 
-void bleat_gatt_connect_async(BleatGatt* obj, void* context, Void_VoidP_BleatGattP_Uint handler) {
+void bleat_gatt_connect_async(BleatGatt* obj, void* context, Void_VoidP_BleatGattP_CharP handler) {
     obj->connect_async(context, handler);
 }
 

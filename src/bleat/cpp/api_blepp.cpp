@@ -5,6 +5,8 @@
 
 #ifdef API_BLEPP
 
+#include "error_messages.h"
+
 #include "blepp/blestatemachine.h"
 #include "blepp/pretty_printers.h"
 
@@ -53,6 +55,10 @@ BleatGatt_Blepp::BleatGatt_Blepp(int nopts, const BleatGattOption* opts) : mac(n
         gatt.read_primary_services();
     };
     gatt.cb_disconnected = [this](BLEGATTStateMachine::Disconnect d) {
+        if (active_char != nullptr && active_char->gatt_op_error_handler != nullptr) {
+            active_char->gatt_op_error_handler(BLEGATTStateMachine::get_disconnect_string(d));
+        }
+
         auto copy = terminate_state_machine;
         terminate_state_machine = true;
         if (!copy) {
@@ -72,10 +78,10 @@ BleatGatt_Blepp::BleatGatt_Blepp(int nopts, const BleatGattOption* opts) : mac(n
             }
         }
 
-        connect_handler(connect_context, this, BLEAT_GATT_STATUS_CONNECT_OK);
+        connect_handler(connect_context, this, nullptr);
     };
     gatt.cb_write_response = [this]() {
-        write_handler(write_context, active_char);
+        write_handler(write_context, active_char, nullptr);
     };
 
     thread th([this]() {
@@ -111,7 +117,7 @@ BleatGatt_Blepp::BleatGatt_Blepp(int nopts, const BleatGattOption* opts) : mac(n
             if (status <= 0) {
                 terminate_state_machine = true;
                 gatt.close();
-                connect_handler(connect_context, this, status == 0 ? BLEAT_GATT_STATUS_CONNECT_TIMEOUT : BLEAT_GATT_STATUS_CONNECT_GATT_ERROR);
+                connect_handler(connect_context, this, status == 0 ? BLEAT_CONNECT_TIMEOUT : BLEAT_GATT_ERROR);
             } else {
                 terminate_state_machine = false;
                 while(!terminate_state_machine && socket_select(nullptr) > 0) {
@@ -130,7 +136,7 @@ BleatGatt_Blepp::~BleatGatt_Blepp() {
     }
 }
 
-void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_Uint handler) {
+void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP handler) {
     connect_context = context;
     connect_handler = handler;
     gatt.connect(mac, false, false, device == nullptr ? "" : device);
@@ -152,7 +158,7 @@ BleatGattChar* BleatGatt_Blepp::find_characteristic(const std::string& uuid) {
 
 BleatGattChar_Blepp::BleatGattChar_Blepp(BleatGatt_Blepp* owner, BLEPP::Characteristic& ble_char) : owner(owner), ble_char(ble_char) {
     ble_char.cb_read = [this](const PDUReadResponse& r) {
-        read_handler(read_context, this, r.value().first, r.value().second - r.value().first);
+        read_handler(read_context, this, r.value().first, r.value().second - r.value().first, nullptr);
     };
     ble_char.cb_notify_or_indicate = [this](const PDUNotificationOrIndication& n) {
         value_changed_handler(value_changed_context, this, n.value().first, n.value().second - n.value().first);
@@ -163,36 +169,132 @@ BleatGattChar_Blepp::~BleatGattChar_Blepp() {
 
 }
 
-void BleatGattChar_Blepp::write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP handler) {
-    owner->active_char = this;
-    owner->write_context = context;
-    owner->write_handler = handler;
-    ble_char.write_request(value, len);
+void BleatGattChar_Blepp::write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+    try {
+        gatt_op_error_handler = [this, context, handler](const char* msg) {
+            owner->active_char = nullptr;
+
+            if (msg != nullptr) {
+                stringstream error_stream;
+                string full_msg;
+
+                error_stream << BLEAT_GATT_WRITE_ERROR << "(" << msg << ")";
+                full_msg = error_stream.str();
+                handler(context, this, full_msg.c_str());
+            } else {
+                handler(context, this, msg);
+            }            
+        };
+        
+        owner->active_char = this;
+        owner->write_context = context;
+        owner->write_handler = handler;
+        
+        ble_char.write_request(value, len);
+    } catch (const std::exception& e) {
+        gatt_op_error_handler(e.what());
+    } catch (const BLEDevice::WriteError&) {
+        gatt_op_error_handler(nullptr);
+    }
 }
 
-void BleatGattChar_Blepp::write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP handler) {
-    ble_char.write_command(value, len);
-    handler(context, this);
+void BleatGattChar_Blepp::write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+    stringstream error_stream;
+    string msg;
+    const char* error_msg = nullptr;
+
+    try {
+        ble_char.write_command(value, len);
+    } catch (const std::exception& e) {
+        error_stream << BLEAT_GATT_WRITE_ERROR << "(" << e.what() << ")";
+        msg = error_stream.str();
+        error_msg = msg.c_str();
+    } catch (const BLEDevice::WriteError&) {
+        error_msg = BLEAT_GATT_WRITE_ERROR;
+    }
+
+    handler(context, this, error_msg);
 }
 
-void BleatGattChar_Blepp::read_async(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte handler) {
-    read_context = context;
-    read_handler = handler;
-    ble_char.read_request();
+void BleatGattChar_Blepp::read_async(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte_CharP handler) {
+    try {
+        gatt_op_error_handler = [this, context, handler](const char* msg) {
+            owner->active_char = nullptr;
+
+            if (msg != nullptr) {
+                stringstream error_stream;
+                string full_msg;
+
+                error_stream << BLEAT_GATT_READ_ERROR << "(" << msg << ")";
+                full_msg = error_stream.str();
+                handler(context, this, nullptr, 0, full_msg.c_str());
+            } else {
+                handler(context, this, nullptr, 0, msg);
+            }            
+        };
+
+        owner->active_char = this;
+        read_context = context;
+        read_handler = handler;
+
+        ble_char.read_request();
+    } catch (const std::exception& e) {
+        gatt_op_error_handler(e.what());
+    } catch (const BLEDevice::WriteError&) {
+        gatt_op_error_handler(nullptr);
+    }
 }
 
-void BleatGattChar_Blepp::enable_notifications_async(void* context, Void_VoidP_BleatGattCharP handler) {
-    owner->active_char = this;
-    owner->write_context = context;
-    owner->write_handler = handler;
-    ble_char.set_notify_and_indicate(true, false);
+void BleatGattChar_Blepp::enable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+    try {
+        gatt_op_error_handler = [this, context, handler](const char* msg) {
+            owner->active_char = nullptr;
+
+            if (msg != nullptr) {
+                stringstream error_stream;
+                string full_msg;
+
+                error_stream << BLEAT_GATT_ENABLE_NOTIFY_ERROR << "(" << msg << ")";
+                full_msg = error_stream.str();
+                handler(context, this, full_msg.c_str());
+            } else {
+                handler(context, this, msg);
+            }            
+        };
+
+        owner->active_char = this;
+        owner->write_context = context;
+        owner->write_handler = handler;
+        ble_char.set_notify_and_indicate(true, false);
+    } catch (const std::exception& e) {
+        gatt_op_error_handler(e.what());
+    }
 }
 
-void BleatGattChar_Blepp::disable_notifications_async(void* context, Void_VoidP_BleatGattCharP handler) {
-    owner->active_char = this;
-    owner->write_context = context;
-    owner->write_handler = handler;
-    ble_char.set_notify_and_indicate(false, false);
+void BleatGattChar_Blepp::disable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+    try {
+        gatt_op_error_handler = [this, context, handler](const char* msg) {
+            owner->active_char = nullptr;
+
+            if (msg != nullptr) {
+                stringstream error_stream;
+                string full_msg;
+
+                error_stream << BLEAT_GATT_DISABLE_NOTIFY_ERROR << "(" << msg << ")";
+                full_msg = error_stream.str();
+                handler(context, this, full_msg.c_str());
+            } else {
+                handler(context, this, msg);
+            }            
+        };
+
+        owner->active_char = this;
+        owner->write_context = context;
+        owner->write_handler = handler;
+        ble_char.set_notify_and_indicate(false, false);
+    } catch (const std::exception& e) {
+        gatt_op_error_handler(e.what());
+    }
 }
 
 void BleatGattChar_Blepp::set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte handler) {

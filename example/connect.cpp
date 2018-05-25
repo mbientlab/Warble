@@ -38,7 +38,7 @@ static queue<vector<uint8_t>> values;
 static function<void(BleatGattChar*)> write_values_handler;
 static void write_values(BleatGattChar* gatt_char) {
     if (!values.empty()) {
-        bleat_gattchar_write_async(gatt_char, values.front().data(), values.front().size(), nullptr, [](void* context, BleatGattChar* caller) {
+        bleat_gattchar_write_async(gatt_char, values.front().data(), values.front().size(), nullptr, [](void* context, BleatGattChar* caller, const char* value) {
             values.pop();
             write_values(caller);
         });
@@ -50,8 +50,8 @@ static void write_values(BleatGattChar* gatt_char) {
 static function<void(BleatGatt*)> reconnect_handler;
 static void reconnect_async(BleatGatt* gatt) {
     cerr << "Reconnecting..." << endl;
-    bleat_gatt_connect_async(gatt, nullptr, [](void* context, BleatGatt* gatt, uint32_t status) {
-        if (status == BLEAT_GATT_STATUS_CONNECT_OK) {
+    bleat_gatt_connect_async(gatt, nullptr, [](void* context, BleatGatt* gatt, const char* value) {
+        if (value == nullptr) {
             reconnect_handler(gatt);
         } else {
             reconnect_async(gatt);
@@ -75,16 +75,15 @@ int main(int argc, char** argv) {
         };
         reconnect_async(caller);
     });
-    bleat_gatt_connect_async(cgatt, nullptr, [](void* context, BleatGatt* caller, uint32_t status) {
-        cout << "what is my status? " << status << endl;
-        if (status) {
-            cout << "Error connecting: " << status << endl;
+    bleat_gatt_connect_async(cgatt, nullptr, [](void* context, BleatGatt* caller, const char* value) {
+        if (value != nullptr) {
+            cout << "Error connecting: " << value << endl;
             return;
         }
         auto cmd = bleat_gatt_find_characteristic(caller, "326a9001-85cb-9195-d9dd-464cfbbae75a");
 
         uint8_t conn_param[] = { 0x11, 0x09, 0x06, 0x00, 0x06, 0x00, 0x00, 0x00, 0x58, 0x02 };
-        bleat_gattchar_write_async(cmd, conn_param, sizeof(conn_param), caller, [](void* context, BleatGattChar* caller) {
+        bleat_gattchar_write_async(cmd, conn_param, sizeof(conn_param), caller, [](void* context, BleatGattChar* caller, const char* value) {
             cout << "you may proceed" << endl;
 
             auto notify = bleat_gatt_find_characteristic((BleatGatt*)context, "326a9006-85cb-9195-d9dd-464cfbbae75a");
@@ -92,7 +91,7 @@ int main(int argc, char** argv) {
                 samples++;
                 cout << "samples = " << samples << endl;
             });
-            bleat_gattchar_enable_notifications_async(notify, caller, [](void* context, BleatGattChar* caller) {
+            bleat_gattchar_enable_notifications_async(notify, caller, [](void* context, BleatGattChar* caller, const char* value) {
                 /*
                 values.push({0x03, 0x03, 0x29, 0x0c});
                 values.push({0x03, 0x02, 0x01, 0x00});
