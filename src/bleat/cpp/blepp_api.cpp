@@ -1,10 +1,10 @@
 /**
  * @copyright MbientLab License
  */
-#include "api_blepp.h"
-
 #ifdef API_BLEPP
 
+#include "gatt_def.h"
+#include "gattchar_def.h"
 #include "error_messages.h"
 
 #include "blepp/blestatemachine.h"
@@ -12,6 +12,7 @@
 
 #include <condition_variable>
 #include <fcntl.h>
+#include <mutex>
 #include <stdexcept>
 #include <sys/time.h>
 #include <thread>
@@ -21,11 +22,74 @@
 using namespace std;
 using namespace BLEPP;
 
-BleatGatt_Blepp::BleatGatt_Blepp(int nopts, const BleatGattOption* opts) : mac(nullptr), device(nullptr), cv_lock(cv_m), terminate_state_machine(true) {
+struct BleatGattChar_Blepp;
+
+struct BleatGatt_Blepp : public BleatGatt {
+    BleatGatt_Blepp(const char* mac, const char* device);
+    virtual ~BleatGatt_Blepp();
+
+    virtual void connect_async(void* context, Void_VoidP_BleatGattP_CharP handler);
+    virtual void disconnect();
+    virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Uint handler);
+
+    virtual BleatGattChar* find_characteristic(const std::string& uuid);
+
+private:
+    friend BleatGattChar_Blepp;
+    
+    const char *mac, *device;
+
+    void *connect_context, *on_disconnect_context;
+    Void_VoidP_BleatGattP_CharP connect_handler;
+    Void_VoidP_BleatGattP_Uint on_disconnect_handler;
+
+    BleatGattChar_Blepp* active_char;
+    void* write_context;
+    Void_VoidP_BleatGattCharP_CharP write_handler;
+
+    BLEGATTStateMachine gatt;
+    unordered_map<string, BleatGattChar_Blepp*> characteristics;
+
+    condition_variable state_machine_cv;
+    mutex cv_m;
+    unique_lock<mutex> cv_lock;
+    thread blepp_state_machine;
+    bool terminate_state_machine;
+};
+
+struct BleatGattChar_Blepp : public BleatGattChar {
+    BleatGattChar_Blepp(BleatGatt_Blepp* owner, BLEPP::Characteristic& ble_char);
+
+    virtual ~BleatGattChar_Blepp();
+
+    virtual void write_async(const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
+    virtual void write_without_resp_async(const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
+
+    virtual void read_async(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte_CharP handler);
+
+    virtual void enable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
+    virtual void disable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
+    virtual void set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte handler);
+
+private:
+    friend BleatGatt_Blepp;
+    
+    BleatGatt_Blepp* owner;
+    Characteristic& ble_char;
+
+    void *read_context, *value_changed_context;
+    Void_VoidP_BleatGattCharP_UbyteC_Ubyte_CharP read_handler;
+    Void_VoidP_BleatGattCharP_UbyteC_Ubyte value_changed_handler;
+
+    function<void(const char*)> gatt_op_error_handler;
+};
+
+BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatGattOption* opts) {
+    const char *mac, *device;
     unordered_map<string, function<void(const char*)>> arg_processors = {
-        {"mac", [this](const char* value) { mac = value; }}, 
-        {"hci", [this](const char* value) { device = value; }},
-        {"log-level", [this](const char* value) {
+        {"mac", [&mac](const char* value) { mac = value; }}, 
+        {"hci", [&device](const char* value) { device = value; }},
+        {"log-level", [](const char* value) {
             if (!strcmp(value, "error")) {
                 log_level = Error;
             } else if (!strcmp(value, "warning")) {
@@ -51,6 +115,10 @@ BleatGatt_Blepp::BleatGatt_Blepp(int nopts, const BleatGattOption* opts) : mac(n
         throw runtime_error("option 'mac' was not set");
     }
 
+    return new BleatGatt_Blepp(mac, device);
+}
+
+BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* device) : mac(mac), device(device), cv_lock(cv_m), terminate_state_machine(true) {
     gatt.cb_connected = [this]() {
         gatt.read_primary_services();
     };
