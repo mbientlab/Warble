@@ -54,13 +54,15 @@
     <ClInclude Include="..\src\bleat\cpp\scanner_def.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\cpp\win10_api.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\bleat\cpp\win10_scanner.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="$(LibDef)" />
+    <ClInclude Include="$(LibDef)" >
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\bleat\cpp\error_messages.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\bleat\cpp\gatt.cpp">

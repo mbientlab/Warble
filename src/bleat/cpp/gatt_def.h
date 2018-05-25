@@ -17,3 +17,5 @@ struct BleatGatt {
 
     virtual BleatGattChar* find_characteristic(const std::string& uuid) = 0;
 };
+
+BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatGattOption* opts);

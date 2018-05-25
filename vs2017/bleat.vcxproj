@@ -23,10 +23,10 @@
   </PropertyGroup>
   <ItemGroup>
     <ClInclude Include="..\src\bleat\bleat.h" />
+    <ClInclude Include="..\src\bleat\cpp\error_messages.h" />
     <ClInclude Include="..\src\bleat\cpp\gattchar_def.h" />
     <ClInclude Include="..\src\bleat\cpp\gatt_def.h" />
     <ClInclude Include="..\src\bleat\cpp\scanner_def.h" />
-    <ClInclude Include="..\src\bleat\cpp\win10_api.h" />
     <ClInclude Include="..\src\bleat\cpp\win10_scanner.h" />
     <ClInclude Include="..\src\bleat\dllmarker.h" />
     <ClInclude Include="..\src\bleat\gatt.h" />
