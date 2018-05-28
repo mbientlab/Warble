@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include "blepp_scanner.h"
 
-static BleatScanner_Blepp* scanner = nullptr;
+static BleatScanner_Blepp* scanner = new BleatScanner_Blepp();
 #elif API_WIN10
 #include "win10_scanner.h"
 static BleatScanner_Win10* scanner = new BleatScanner_Win10();
@@ -30,14 +30,10 @@ void bleat_scanner_configure(BLEAT_INT nopts, const BleatOption* opts) {
         { "hci", [&device](const char* value) { device = value; } }
     };
 
-    void* context = nullptr;
-    Void_VoidP_BleatScanResultP handler = nullptr;
+    void* context = scanner->scan_result_context;
+    Void_VoidP_BleatScanResultP handler = scanner->scan_result_handler;
+    delete scanner;
 
-    if (scanner != nullptr) {
-        context = scanner->scan_result_context;
-        handler = scanner->scan_result_handler;
-        delete scanner;
-    }
     scanner = device == nullptr ? new BleatScanner_Blepp() : new BleatScanner_Blepp(device);
     scanner->scan_result_context = context;
     scanner->scan_result_handler = handler;
