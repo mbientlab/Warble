@@ -9,18 +9,18 @@ BleatGatt::~BleatGatt() {
 
 }
 
-BleatGatt* bleat_gatt_new(const char* mac) {
-    BleatGattOption opts[] = {
+BleatGatt* bleat_gatt_create(const char* mac) {
+    BleatOption opts[] = {
         {"mac", mac}
     };
-    return bleat_gatt_new_with_config(1, opts);
+    return bleat_gatt_create_with_options(1, opts);
 }
 
-BleatGatt* bleat_gatt_new_with_config(int32_t nopts, const BleatGattOption* opts) {
+BleatGatt* bleat_gatt_create_with_options(int32_t nopts, const BleatOption* opts) {
     return bleatgatt_create(nopts, opts);
 }
 
-void bleat_gatt_free(BleatGatt* obj) {
+void bleat_gatt_delete(BleatGatt* obj) {
     delete obj;
 }
 

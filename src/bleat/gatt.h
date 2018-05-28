@@ -13,9 +13,9 @@
 extern "C" {
 #endif
 
-BLEAT_API BleatGatt* bleat_gatt_new(const char* mac);
-BLEAT_API BleatGatt* bleat_gatt_new_with_config(BLEAT_INT nopts, const BleatGattOption* opts);
-BLEAT_API void bleat_gatt_free(BleatGatt* obj);
+BLEAT_API BleatGatt* bleat_gatt_create(const char* mac);
+BLEAT_API BleatGatt* bleat_gatt_create_with_options(BLEAT_INT nopts, const BleatOption* opts);
+BLEAT_API void bleat_gatt_delete(BleatGatt* obj);
 
 BLEAT_API void bleat_gatt_connect_async(BleatGatt* obj, void* context, Void_VoidP_BleatGattP_CharP handler);
 BLEAT_API void bleat_gatt_disconnect(BleatGatt* obj);

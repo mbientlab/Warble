@@ -22,3 +22,8 @@
 #define BLEAT_INT int32_t
 
 #endif
+
+typedef struct {
+    const char* key;
+    const char* value;
+} BleatOption;

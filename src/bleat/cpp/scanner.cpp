@@ -6,28 +6,52 @@
 #include "bleat/scanner.h"
 
 #ifdef API_BLEPP
+#include <functional>
+#include <string>
+#include <unordered_map>
 #include "blepp_scanner.h"
-static BleatScanner_Blepp scanner;
-#elif API_WIN10
-#include <wrl/wrappers/corewrappers.h>
-#include "win10_scanner.h"
 
-static Microsoft::WRL::Wrappers::RoInitializeWrapper initialize(RO_INIT_MULTITHREADED);
-static BleatScanner_Win10 scanner;
+static BleatScanner_Blepp* scanner = nullptr;
+#elif API_WIN10
+#include "win10_scanner.h"
+static BleatScanner_Win10* scanner = new BleatScanner_Win10();
 #endif
+
+using namespace std;
 
 BleatScanner::~BleatScanner() {
 
 }
 
+void bleat_scanner_configure(BLEAT_INT nopts, const BleatOption* opts) {
+#ifdef API_BLEPP
+    const char *device = nullptr;
+    unordered_map<string, function<void(const char*)>> arg_processors = {
+        { "hci", [&device](const char* value) { device = value; } }
+    };
+
+    void* context = nullptr;
+    Void_VoidP_BleatScanResultP handler = nullptr;
+
+    if (scanner != nullptr) {
+        context = scanner->scan_result_context;
+        handler = scanner->scan_result_handler;
+        delete scanner;
+    }
+    scanner = device == nullptr ? new BleatScanner_Blepp() : new BleatScanner_Blepp(device);
+    scanner->scan_result_context = context;
+    scanner->scan_result_handler = handler;
+#endif
+}
+
 void bleat_scanner_set_handler(void* context, Void_VoidP_BleatScanResultP handler) {
-    scanner.set_handler(context, handler);
+    scanner->set_handler(context, handler);
 }
 
 void bleat_scanner_start() {
-    scanner.start();
+    scanner->start();
 }
 
 void bleat_scanner_stop() {
-    scanner.stop();
+    scanner->stop();
 }

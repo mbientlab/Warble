@@ -98,7 +98,7 @@ private:
     unordered_map<Guid, BleatGattChar_Win10*, Hasher, EqualFn> characteristics;
 };
 
-BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatGattOption* opts) {
+BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
     const char* mac = nullptr;
     unordered_map<string, function<void(const char*)>> arg_processors = {
         { "mac", [&mac](const char* value) {mac = value; } }

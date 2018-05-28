@@ -12,6 +12,10 @@ using namespace Windows::Foundation;
 using namespace Windows::Security::Cryptography;
 using namespace Platform;
 
+BleatScanner* bleatscanner_create(std::int32_t nopts, const BleatOption* opts) {
+    return new BleatScanner_Win10();
+}
+
 BleatScanner_Win10::BleatScanner_Win10() : scan_result_context(nullptr), scan_result_handler(nullptr) {
     watcher = ref new BluetoothLEAdvertisementWatcher();
     watcher->ScanningMode = BluetoothLEScanningMode::Active;

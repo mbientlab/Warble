@@ -5,6 +5,7 @@
 #pragma once
 
 #include "bleat/scan_result.h"
+#include "bleat/types.h"
 
 class BleatScanner {
 public:

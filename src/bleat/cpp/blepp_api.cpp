@@ -88,20 +88,7 @@ BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatGattOption* opts) {
     const char *mac, *device;
     unordered_map<string, function<void(const char*)>> arg_processors = {
         {"mac", [&mac](const char* value) { mac = value; }}, 
-        {"hci", [&device](const char* value) { device = value; }},
-        {"log-level", [](const char* value) {
-            if (!strcmp(value, "error")) {
-                log_level = Error;
-            } else if (!strcmp(value, "warning")) {
-                log_level = Warning;
-            } else if (!strcmp(value, "info")) {
-                log_level = Info;
-            } else if (!strcmp(value, "debug")) {
-                log_level = Debug;
-            } else if (!strcmp(value, "trace")) {
-                log_level = Trace;
-            }
-        }}
+        {"hci", [&device](const char* value) { device = value; }}
     };
 
     for(int i = 0; i < nopts; i++) {

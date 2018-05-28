@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 
     signal(SIGINT, signal_handler);
 
-    auto cgatt = bleat_gatt_new(argv[1]);
+    auto cgatt = bleat_gatt_create(argv[1]);
     bleat_gatt_on_disconnect(cgatt, nullptr, [](void* context, BleatGatt* caller, uint32_t status) {
         cout << "i am disconnected: " << status << endl;
         reconnect_handler = [](BleatGatt* gatt) {
