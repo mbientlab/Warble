@@ -12,6 +12,8 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+
+using namespace BLEPP;
 #endif
 
 using namespace std;

@@ -84,7 +84,7 @@ private:
     function<void(const char*)> gatt_op_error_handler;
 };
 
-BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatGattOption* opts) {
+BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
     const char *mac, *device;
     unordered_map<string, function<void(const char*)>> arg_processors = {
         {"mac", [&mac](const char* value) { mac = value; }}, 
