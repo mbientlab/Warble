@@ -1,6 +1,6 @@
 # @copyright MbientLab License
 
-.PHONY: build clean doc publish install
+.PHONY: build clean doc publish install deps
 
 $(shell ./bin/generate_version.sh)
 include config.mk
@@ -60,7 +60,7 @@ DEPS:=$(OBJS:%.o=%.d)
 
 APP_OUTPUT:=$(REAL_DIST_DIR)/$(LIB_NAME)
 
-build: $(MODULES_BUILD_DIR) $(REAL_DIST_DIR) $(APP_OUTPUT)
+build: deps $(MODULES_BUILD_DIR) $(REAL_DIST_DIR) $(APP_OUTPUT)
 
 $(REAL_BUILD_DIR)/%.o: %.cpp
 	$(CXX) -MMD -MP -MF "$(@:%.o=%.d)" -c -o $@ $(CXXFLAGS) $<
@@ -101,3 +101,6 @@ doc:
 
 install: $(APP_OUTPUT)
 	install $(APP_OUTPUT) /usr/local/lib/$(LIB_SO_NAME)
+
+deps:
+	cd deps/libblepp; ./configure; 	make
