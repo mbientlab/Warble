@@ -1,12 +1,14 @@
 # @copyright MbientLab License
 
-.PHONY: build clean doc publish install deps
+.PHONY: build clean doc publish install
 
 $(shell ./bin/generate_version.sh)
 include config.mk
 include version.mk
 
-CXXFLAGS:=-std=c++14 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -DBLEAT_DLL -DBLEAT_DLL_EXPORTS -Isrc 
+CXXFLAGS:=-std=c++14 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -DBLEAT_DLL -DBLEAT_DLL_EXPORT -Isrc 
+
+DEPS_BLEPP:=deps/libblepp/libble++.so
 
 MODULES_SRC_DIR= $(addsuffix /cpp, $(addprefix src/, $(MODULES)))
 GEN:=
@@ -60,7 +62,7 @@ DEPS:=$(OBJS:%.o=%.d)
 
 APP_OUTPUT:=$(REAL_DIST_DIR)/$(LIB_NAME)
 
-build: deps $(MODULES_BUILD_DIR) $(REAL_DIST_DIR) $(APP_OUTPUT)
+build: $(DEPS_BLEPP) $(MODULES_BUILD_DIR) $(REAL_DIST_DIR) $(APP_OUTPUT)
 
 $(REAL_BUILD_DIR)/%.o: %.cpp
 	$(CXX) -MMD -MP -MF "$(@:%.o=%.d)" -c -o $@ $(CXXFLAGS) $<
@@ -102,5 +104,5 @@ doc:
 install: $(APP_OUTPUT)
 	install $(APP_OUTPUT) /usr/local/lib/$(LIB_SO_NAME)
 
-deps:
+$(DEPS_BLEPP):
 	cd deps/libblepp; ./configure; 	make

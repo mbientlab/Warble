@@ -39,8 +39,7 @@ private:
     
     const char *mac, *device;
 
-    void *connect_context, *on_disconnect_context;
-    Void_VoidP_BleatGattP_CharP connect_handler;
+    void *on_disconnect_context;
     Void_VoidP_BleatGattP_Uint on_disconnect_handler;
 
     BleatGattChar_Blepp* active_char;
@@ -54,7 +53,6 @@ private:
     mutex cv_m;
     unique_lock<mutex> cv_lock;
     thread blepp_state_machine;
-    bool terminate_state_machine;
 };
 
 struct BleatGattChar_Blepp : public BleatGattChar {
@@ -85,7 +83,7 @@ private:
 };
 
 BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
-    const char *mac, *device;
+    const char *mac = nullptr, *device = nullptr;
     unordered_map<string, function<void(const char*)>> arg_processors = {
         {"mac", [&mac](const char* value) { mac = value; }}, 
         {"hci", [&device](const char* value) { device = value; }}
@@ -105,20 +103,9 @@ BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
     return new BleatGatt_Blepp(mac, device);
 }
 
-BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* device) : mac(mac), device(device), cv_lock(cv_m), terminate_state_machine(true) {
+BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* device) : mac(mac), device(device), cv_lock(cv_m) {
     gatt.cb_connected = [this]() {
         gatt.read_primary_services();
-    };
-    gatt.cb_disconnected = [this](BLEGATTStateMachine::Disconnect d) {
-        if (active_char != nullptr && active_char->gatt_op_error_handler != nullptr) {
-            active_char->gatt_op_error_handler(BLEGATTStateMachine::get_disconnect_string(d));
-        }
-
-        auto copy = terminate_state_machine;
-        terminate_state_machine = true;
-        if (!copy) {
-            on_disconnect_handler(on_disconnect_context, this, d.error_code);
-        }
     };
     gatt.cb_find_characteristics = [this]() {
         gatt.get_client_characteristic_configuration();
@@ -126,21 +113,43 @@ BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* device) : mac(mac)
     gatt.cb_services_read = [this]() {
         gatt.find_all_characteristics();
     };
-    gatt.cb_get_client_characteristic_configuration = [this]() {
-        for(auto& service: gatt.primary_services) {
-	        for(auto& characteristic: service.characteristics) {
-                characteristics.emplace(to_str(characteristic.uuid), new BleatGattChar_Blepp(this, characteristic));
-            }
-        }
-
-        connect_handler(connect_context, this, nullptr);
-    };
     gatt.cb_write_response = [this]() {
         write_handler(write_context, active_char, nullptr);
     };
+}
 
-    thread th([this]() {
-        auto socket_select = [this](timeval* timeout) {
+BleatGatt_Blepp::~BleatGatt_Blepp() {
+    gatt.close();
+
+    for(auto it: characteristics) {
+        delete it.second;
+    }
+}
+
+void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP handler) {
+    thread th([this, context, handler]() {
+        bool terminate = false;
+        int dc_code;
+
+        gatt.cb_disconnected = [this, &terminate, &dc_code](BLEGATTStateMachine::Disconnect d) {
+            if (active_char != nullptr && active_char->gatt_op_error_handler != nullptr) {
+                active_char->gatt_op_error_handler(BLEGATTStateMachine::get_disconnect_string(d));
+            }
+
+            dc_code = d.error_code;
+            terminate = true;
+        };
+        gatt.cb_get_client_characteristic_configuration = [this, context, handler]() {
+            for(auto& service: gatt.primary_services) {
+    	        for(auto& characteristic: service.characteristics) {
+                    characteristics.emplace(to_str(characteristic.uuid), new BleatGattChar_Blepp(this, characteristic));
+                }
+            }
+
+            handler(context, this, nullptr);
+        };
+
+        auto socket_select = [this, &terminate](timeval* timeout) {
             fd_set write_set, read_set;
             FD_ZERO(&read_set);
             FD_ZERO(&write_set);
@@ -151,7 +160,7 @@ BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* device) : mac(mac)
             }
 
             int status = select(gatt.socket() + 1, &read_set, &write_set, nullptr, timeout);
-            if (status > 0) {
+            if (!terminate && status > 0) {
                 if(FD_ISSET(gatt.socket(), &write_set)) {
                     gatt.write_and_process_next();
                 }
@@ -164,38 +173,22 @@ BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* device) : mac(mac)
             return status;
         };
 
-        while(true) {
-            state_machine_cv.wait(cv_lock, [this] { return gatt.socket() != -1; });
-
-            timeval connect_timeout = { 10, 0 };
-            int status = socket_select(&connect_timeout);
-            if (status <= 0) {
-                terminate_state_machine = true;
-                gatt.close();
-                connect_handler(connect_context, this, status == 0 ? BLEAT_CONNECT_TIMEOUT : BLEAT_GATT_ERROR);
-            } else {
-                terminate_state_machine = false;
-                while(!terminate_state_machine && socket_select(nullptr) > 0) {
-                }
+        gatt.connect(mac, false, false, device == nullptr ? "" : device);
+        timeval connect_timeout = { 10, 0 };
+        int status = socket_select(&connect_timeout);
+        if (status <= 0) {
+            terminate = true;
+            gatt.close();
+            handler(context, this, status == 0 ? BLEAT_CONNECT_TIMEOUT : BLEAT_GATT_ERROR);
+        } else {
+            terminate = false;
+            while(!terminate && socket_select(nullptr) > 0) {
             }
+            on_disconnect_handler(on_disconnect_context, this, dc_code);
         }
     });
+    th.detach();
     swap(blepp_state_machine, th);
-}
-
-BleatGatt_Blepp::~BleatGatt_Blepp() {
-    gatt.close();
-
-    for(auto it: characteristics) {
-        delete it.second;
-    }
-}
-
-void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP handler) {
-    connect_context = context;
-    connect_handler = handler;
-    gatt.connect(mac, false, false, device == nullptr ? "" : device);
-    state_machine_cv.notify_all();
 }
 
 void BleatGatt_Blepp::disconnect() {
