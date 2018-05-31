@@ -126,7 +126,7 @@ BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
         throw runtime_error("option 'mac' was not set");
     }
 
-    return new BleatGatt_Win10(mac);
+    return new BleatGatt_Win10(mac, addr_type);
 }
 
 BleatGatt_Win10::BleatGatt_Win10(const char* mac, BluetoothAddressType addr_type) : mac(mac), device(nullptr), on_disconnect_context(nullptr), on_disconnect_handler(nullptr), addr_type(addr_type) {
