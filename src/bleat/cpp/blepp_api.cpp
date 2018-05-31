@@ -10,9 +10,7 @@
 #include "blepp/blestatemachine.h"
 #include "blepp/pretty_printers.h"
 
-#include <condition_variable>
 #include <fcntl.h>
-#include <mutex>
 #include <stdexcept>
 #include <sys/time.h>
 #include <thread>
@@ -49,9 +47,6 @@ private:
     BLEGATTStateMachine gatt;
     unordered_map<string, BleatGattChar_Blepp*> characteristics;
 
-    condition_variable state_machine_cv;
-    mutex cv_m;
-    unique_lock<mutex> cv_lock;
     thread blepp_state_machine;
     bool public_addr;
 };
@@ -112,7 +107,7 @@ BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
     return new BleatGatt_Blepp(mac, hci_mac, public_addr);
 }
 
-BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr) : mac(mac), hci_mac(hci_mac), cv_lock(cv_m), public_addr(public_addr) {
+BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr) : mac(mac), hci_mac(hci_mac), public_addr(public_addr) {
     gatt.cb_connected = [this]() {
         gatt.read_primary_services();
     };
