@@ -29,7 +29,7 @@ struct BleatGatt_Blepp : public BleatGatt {
 
     virtual void connect_async(void* context, Void_VoidP_BleatGattP_CharP handler);
     virtual void disconnect();
-    virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Uint handler);
+    virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Int handler);
 
     virtual BleatGattChar* find_characteristic(const std::string& uuid);
     virtual bool service_exists(const std::string& uuid);
@@ -40,7 +40,7 @@ private:
     const char *mac, *hci_mac;
 
     void *on_disconnect_context;
-    Void_VoidP_BleatGattP_Uint on_disconnect_handler;
+    Void_VoidP_BleatGattP_Int on_disconnect_handler;
 
     BleatGattChar_Blepp* active_char;
     void* write_context;
@@ -62,11 +62,11 @@ struct BleatGattChar_Blepp : public BleatGattChar {
     virtual void write_async(const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
     virtual void write_without_resp_async(const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
 
-    virtual void read_async(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte_CharP handler);
+    virtual void read_async(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP handler);
 
     virtual void enable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
     virtual void disable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
-    virtual void set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte handler);
+    virtual void set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
 
 private:
     friend BleatGatt_Blepp;
@@ -75,8 +75,8 @@ private:
     Characteristic& ble_char;
 
     void *read_context, *value_changed_context;
-    Void_VoidP_BleatGattCharP_UbyteC_Ubyte_CharP read_handler;
-    Void_VoidP_BleatGattCharP_UbyteC_Ubyte value_changed_handler;
+    Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP read_handler;
+    Void_VoidP_BleatGattCharP_UbyteP_Ubyte value_changed_handler;
 
     function<void(const char*)> gatt_op_error_handler;
 };
@@ -137,10 +137,10 @@ static inline string uuid_to_string(const UUID& uuid) {
     char buffer[37];
     switch(uuid.type) {
     case BT_UUID16:
-        sprintf(buffer, "0000%.4x-0000-1000-8000-00805F9b34fb", uuid.value.u16);
+        sprintf(buffer, "0000%.4x-0000-1000-8000-00805f9b34fb", uuid.value.u16);
         return buffer;
     case BT_UUID32:
-        sprintf(buffer, "%.8x-0000-1000-8000-00805F9b34fb", uuid.value.u32);
+        sprintf(buffer, "%.8x-0000-1000-8000-00805f9b34fb", uuid.value.u32);
         return buffer;
     default:
         return to_str(uuid);
@@ -223,13 +223,14 @@ void BleatGatt_Blepp::disconnect() {
     gatt.close();
 }
 
-void BleatGatt_Blepp::on_disconnect(void* context, Void_VoidP_BleatGattP_Uint handler) {
+void BleatGatt_Blepp::on_disconnect(void* context, Void_VoidP_BleatGattP_Int handler) {
     on_disconnect_context = context;
     on_disconnect_handler = handler;
 }
 
 BleatGattChar* BleatGatt_Blepp::find_characteristic(const std::string& uuid) {
-    return characteristics.at(uuid);
+    auto it = characteristics.find(uuid);
+    return it == characteristics.end() ? nullptr : it->second;
 }
 
 bool BleatGatt_Blepp::service_exists(const std::string& uuid) {
@@ -296,7 +297,7 @@ void BleatGattChar_Blepp::write_without_resp_async(const uint8_t* value, uint8_t
     handler(context, this, error_msg);
 }
 
-void BleatGattChar_Blepp::read_async(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte_CharP handler) {
+void BleatGattChar_Blepp::read_async(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP handler) {
     try {
         gatt_op_error_handler = [this, context, handler](const char* msg) {
             owner->active_char = nullptr;
@@ -377,7 +378,7 @@ void BleatGattChar_Blepp::disable_notifications_async(void* context, Void_VoidP_
     }
 }
 
-void BleatGattChar_Blepp::set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte handler) {
+void BleatGattChar_Blepp::set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler) {
     value_changed_context = context;
     value_changed_handler = handler;
 }

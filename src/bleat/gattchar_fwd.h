@@ -14,5 +14,5 @@ typedef struct BleatGattChar BleatGattChar;
 #endif
 
 typedef void(*Void_VoidP_BleatGattCharP_CharP)(void* context, BleatGattChar* caller, const char* value);
-typedef void(*Void_VoidP_BleatGattCharP_UbyteC_Ubyte)(void* context, BleatGattChar* caller, const BLEAT_UBYTE* value, BLEAT_UBYTE length);
-typedef void(*Void_VoidP_BleatGattCharP_UbyteC_Ubyte_CharP)(void* context, BleatGattChar* caller, const BLEAT_UBYTE* value, BLEAT_UBYTE length, const char* value2);
+typedef void(*Void_VoidP_BleatGattCharP_UbyteP_Ubyte)(void* context, BleatGattChar* caller, const BLEAT_UBYTE* value, BLEAT_UBYTE length);
+typedef void(*Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP)(void* context, BleatGattChar* caller, const BLEAT_UBYTE* value, BLEAT_UBYTE length, const char* value2);

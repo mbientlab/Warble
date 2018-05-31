@@ -34,7 +34,7 @@ void bleat_gatt_disconnect(BleatGatt* obj) {
     obj->disconnect();
 }
 
-void bleat_gatt_on_disconnect(BleatGatt* obj, void* context, Void_VoidP_BleatGattP_Uint handler) {
+void bleat_gatt_on_disconnect(BleatGatt* obj, void* context, Void_VoidP_BleatGattP_Int handler) {
     obj->on_disconnect(context, handler);
 }
 

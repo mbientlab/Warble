@@ -35,11 +35,11 @@ struct BleatGattChar_Win10 : public BleatGattChar {
     virtual void write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
     virtual void write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
 
-    virtual void read_async(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte_CharP handler);
+    virtual void read_async(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP handler);
 
     virtual void enable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
     virtual void disable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
-    virtual void set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte handler);
+    virtual void set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
 
 private:
     inline void write_inner_async(GattWriteOption option, const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler) {
@@ -80,7 +80,7 @@ struct BleatGatt_Win10 : public BleatGatt {
 
     virtual void connect_async(void* context, Void_VoidP_BleatGattP_CharP handler);
     virtual void disconnect();
-    virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Uint handler);
+    virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Int handler);
 
     virtual BleatGattChar* find_characteristic(const string& uuid);
     virtual bool service_exists(const string& uuid);
@@ -91,7 +91,7 @@ private:
     const char* mac;
 
     void *on_disconnect_context;
-    Void_VoidP_BleatGattP_Uint on_disconnect_handler;
+    Void_VoidP_BleatGattP_Int on_disconnect_handler;
 
     concurrency::task<void> discover_task, connect_task;
 
@@ -230,7 +230,7 @@ void BleatGatt_Win10::cleanup() {
     device = nullptr;
 }
 
-void BleatGatt_Win10::on_disconnect(void* context, Void_VoidP_BleatGattP_Uint handler) {
+void BleatGatt_Win10::on_disconnect(void* context, Void_VoidP_BleatGattP_Int handler) {
     on_disconnect_context = context;
     on_disconnect_handler = handler;
 }
@@ -280,7 +280,7 @@ void BleatGattChar_Win10::write_without_resp_async(const uint8_t* value, uint8_t
     write_inner_async(GattWriteOption::WriteWithoutResponse, value, len, context, handler);
 }
 
-void BleatGattChar_Win10::read_async(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte_CharP handler) {
+void BleatGattChar_Win10::read_async(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP handler) {
     create_task(characteristic->ReadValueAsync()).then([context, handler, this](GattReadResult^ result) {
         if (result->Status == GattCommunicationStatus::Success) {
             Array<byte>^ wrapper = ref new Array<byte>(result->Value->Length);
@@ -315,7 +315,7 @@ void BleatGattChar_Win10::disable_notifications_async(void* context, Void_VoidP_
         });
 }
 
-void BleatGattChar_Win10::set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte handler) {
+void BleatGattChar_Win10::set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler) {
     cookie = characteristic->ValueChanged += ref new TypedEventHandler<GattCharacteristic^, GattValueChangedEventArgs^>([context, handler, this](GattCharacteristic^ sender, GattValueChangedEventArgs^ obj) {
         Array<byte>^ wrapper = ref new Array<byte>(obj->CharacteristicValue->Length);
         CryptographicBuffer::CopyToByteArray(obj->CharacteristicValue, &wrapper);
