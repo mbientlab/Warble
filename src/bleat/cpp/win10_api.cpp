@@ -14,6 +14,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <wrl/wrappers/corewrappers.h>
 #include <Windows.Devices.Bluetooth.h>
 
@@ -31,8 +32,8 @@ struct BleatGattChar_Win10 : public BleatGattChar {
 
     virtual ~BleatGattChar_Win10();
 
-    virtual void write_async(const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
-    virtual void write_without_resp_async(const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
+    virtual void write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
+    virtual void write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
 
     virtual void read_async(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte_CharP handler);
 
@@ -41,7 +42,7 @@ struct BleatGattChar_Win10 : public BleatGattChar {
     virtual void set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteC_Ubyte handler);
 
 private:
-    inline void write_inner_async(GattWriteOption option, const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+    inline void write_inner_async(GattWriteOption option, const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler) {
         Array<byte>^ wrapper = ref new Array<byte>(len);
         for (uint8_t i = 0; i < len; i++) {
             wrapper[i] = value[i];
@@ -81,7 +82,8 @@ struct BleatGatt_Win10 : public BleatGatt {
     virtual void disconnect();
     virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Uint handler);
 
-    virtual BleatGattChar* find_characteristic(const std::string& uuid);
+    virtual BleatGattChar* find_characteristic(const string& uuid);
+    virtual bool service_exists(const string& uuid);
 
 private:
     void cleanup();
@@ -97,14 +99,15 @@ private:
     BluetoothAddressType addr_type;
     Windows::Foundation::EventRegistrationToken cookie;
     unordered_map<Guid, BleatGattChar_Win10*, Hasher, EqualFn> characteristics;
+    unordered_set<Guid, Hasher, EqualFn> services;
 };
 
-BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
+BleatGatt* bleatgatt_create(int32_t nopts, const BleatOption* opts) {
     const char* mac = nullptr;
     BluetoothAddressType addr_type = BluetoothAddressType::Random;
     unordered_map<string, function<void(const char*)>> arg_processors = {
         { "mac", [&mac](const char* value) {mac = value; } },
-        {"address-type", [&addr_type](const char* value) {
+        { "address-type", [&addr_type](const char* value) {
             if (!strcmp(value, "public")) {
                 addr_type = BluetoothAddressType::Public;
             } else if (!strcmp(value, "unspecified")) {
@@ -123,7 +126,7 @@ BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
         (it->second)(opts[i].value);
     }
     if (mac == nullptr) {
-        throw runtime_error("option 'mac' was not set");
+        throw runtime_error("required option 'mac' was not set");
     }
 
     return new BleatGatt_Win10(mac, addr_type);
@@ -157,7 +160,6 @@ void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
             cookie = device->ConnectionStatusChanged += ref new TypedEventHandler<BluetoothLEDevice^, Object^>([this](BluetoothLEDevice^ sender, Object^ args) {
                 switch (sender->ConnectionStatus) {
                 case BluetoothConnectionStatus::Disconnected:
-
                     if (on_disconnect_handler != nullptr) {
                         on_disconnect_handler(on_disconnect_context, this, 0);
                     }
@@ -180,9 +182,9 @@ void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
         return create_task(device->GetGattServicesAsync());
     }).then([](GattDeviceServicesResult^ result) {
         vector<task<GattCharacteristicsResult^>> find_gattchar_tasks;
-
         if (result->Status == GattCommunicationStatus::Success) {
             for (auto it : result->Services) {
+                services.insert(it->Uuid);
                 find_gattchar_tasks.push_back(create_task(it->GetCharacteristicsAsync()));
             }
 
@@ -233,13 +235,17 @@ void BleatGatt_Win10::on_disconnect(void* context, Void_VoidP_BleatGattP_Uint ha
     on_disconnect_handler = handler;
 }
 
-BleatGattChar* BleatGatt_Win10::find_characteristic(const std::string& uuid) {
-    wstring wide_uuid(uuid.begin(), uuid.end());
-    wstringstream stream;
-    stream << L'{' << wide_uuid << L'}';
+#define UUID_TO_GUID(uuid)\
+    wstring wide_uuid(uuid.begin(), uuid.end());\
+    wstringstream stream;\
+    stream << L'{' << wide_uuid << L'}';\
+\
+    auto casted = ref new Platform::String(stream.str().c_str());\
+    GUID rawguid;\
+    HRESULT hr = IIDFromString(casted->Data(), &rawguid);
 
-    auto casted = ref new Platform::String(stream.str().c_str());
-    GUID rawguid;
+BleatGattChar* BleatGatt_Win10::find_characteristic(const string& uuid) {
+    UUID_TO_GUID(uuid);
     HRESULT hr = IIDFromString(casted->Data(), &rawguid);
 
     if (SUCCEEDED(hr)) {
@@ -247,6 +253,16 @@ BleatGattChar* BleatGatt_Win10::find_characteristic(const std::string& uuid) {
         return it == characteristics.end() ? nullptr : it->second;
     }
     return nullptr;
+}
+
+bool BleatGatt_Win10::service_exists(const string& uuid) {
+    UUID_TO_GUID(uuid);
+    HRESULT hr = IIDFromString(casted->Data(), &rawguid);
+
+    if (SUCCEEDED(hr)) {
+        return services.count(rawguid);
+    }
+    return 0;
 }
 
 BleatGattChar_Win10::BleatGattChar_Win10(GattCharacteristic^ characteristic) : characteristic(characteristic) {

@@ -5,6 +5,8 @@
 #include "bleat/gatt.h"
 #include "gatt_def.h"
 
+using std::int32_t;
+
 BleatGatt::~BleatGatt() {
 
 }
@@ -38,4 +40,8 @@ void bleat_gatt_on_disconnect(BleatGatt* obj, void* context, Void_VoidP_BleatGat
 
 BleatGattChar* bleat_gatt_find_characteristic(BleatGatt* obj, const char* uuid) {
     return obj->find_characteristic(uuid);
+}
+
+int32_t bleat_gatt_has_service(BleatGatt* obj, const char* uuid) {
+    return obj->service_exists(uuid);
 }

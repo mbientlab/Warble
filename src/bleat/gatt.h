@@ -22,6 +22,7 @@ BLEAT_API void bleat_gatt_disconnect(BleatGatt* obj);
 BLEAT_API void bleat_gatt_on_disconnect(BleatGatt* obj, void* context, Void_VoidP_BleatGattP_Uint handler);
 
 BLEAT_API BleatGattChar* bleat_gatt_find_characteristic(BleatGatt* obj, const char* uuid);
+BLEAT_API BLEAT_INT bleat_gatt_has_service(BleatGatt* obj, const char* uuid);
 
 #ifdef __cplusplus
 }

@@ -16,6 +16,7 @@ struct BleatGatt {
     virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Uint handler) = 0;
 
     virtual BleatGattChar* find_characteristic(const std::string& uuid) = 0;
+    virtual bool service_exists(const std::string& uuid) = 0;
 };
 
 BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts);

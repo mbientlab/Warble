@@ -16,6 +16,7 @@
 #include <thread>
 #include <unistd.h>
 #include <unordered_map>
+#include <unordered_set>
 
 using namespace std;
 using namespace BLEPP;
@@ -31,6 +32,7 @@ struct BleatGatt_Blepp : public BleatGatt {
     virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Uint handler);
 
     virtual BleatGattChar* find_characteristic(const std::string& uuid);
+    virtual bool service_exists(const std::string& uuid);
 
 private:
     friend BleatGattChar_Blepp;
@@ -46,6 +48,7 @@ private:
 
     BLEGATTStateMachine gatt;
     unordered_map<string, BleatGattChar_Blepp*> characteristics;
+    unordered_set<string> services;
 
     thread blepp_state_machine;
     bool public_addr;
@@ -130,6 +133,20 @@ BleatGatt_Blepp::~BleatGatt_Blepp() {
     }
 }
 
+static inline string uuid_to_string(const UUID& uuid) {
+    char buffer[37];
+    switch(uuid.type) {
+    case BT_UUID16:
+        sprintf(buffer, "0000%.4x-0000-1000-8000-00805F9b34fb", uuid.value.u16);
+        return buffer;
+    case BT_UUID32:
+        sprintf(buffer, "%.8x-0000-1000-8000-00805F9b34fb", uuid.value.u32);
+        return buffer;
+    default:
+        return to_str(uuid);
+    }   
+}
+
 void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP handler) {
     thread th([this, context, handler]() {
         bool terminate = false;
@@ -144,9 +161,13 @@ void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
             terminate = true;
         };
         gatt.cb_get_client_characteristic_configuration = [this, context, handler]() {
+            services.clear();
+            characteristics.clear();
+
             for(auto& service: gatt.primary_services) {
+                services.insert(uuid_to_string(service.uuid));
     	        for(auto& characteristic: service.characteristics) {
-                    characteristics.emplace(to_str(characteristic.uuid), new BleatGattChar_Blepp(this, characteristic));
+                    characteristics.emplace(uuid_to_string(characteristic.uuid), new BleatGattChar_Blepp(this, characteristic));
                 }
             }
 
@@ -188,7 +209,10 @@ void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
             terminate = false;
             while(!terminate && socket_select(nullptr) > 0) {
             }
-            on_disconnect_handler(on_disconnect_context, this, dc_code);
+
+            if (on_disconnect_handler != nullptr) {
+                on_disconnect_handler(on_disconnect_context, this, dc_code);
+            }
         }
     });
     th.detach();
@@ -206,6 +230,10 @@ void BleatGatt_Blepp::on_disconnect(void* context, Void_VoidP_BleatGattP_Uint ha
 
 BleatGattChar* BleatGatt_Blepp::find_characteristic(const std::string& uuid) {
     return characteristics.at(uuid);
+}
+
+bool BleatGatt_Blepp::service_exists(const std::string& uuid) {
+    return services.count(uuid);
 }
 
 BleatGattChar_Blepp::BleatGattChar_Blepp(BleatGatt_Blepp* owner, BLEPP::Characteristic& ble_char) : owner(owner), ble_char(ble_char) {
