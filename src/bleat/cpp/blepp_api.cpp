@@ -25,7 +25,7 @@ using namespace BLEPP;
 struct BleatGattChar_Blepp;
 
 struct BleatGatt_Blepp : public BleatGatt {
-    BleatGatt_Blepp(const char* mac, const char* device);
+    BleatGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr);
     virtual ~BleatGatt_Blepp();
 
     virtual void connect_async(void* context, Void_VoidP_BleatGattP_CharP handler);
@@ -37,7 +37,7 @@ struct BleatGatt_Blepp : public BleatGatt {
 private:
     friend BleatGattChar_Blepp;
     
-    const char *mac, *device;
+    const char *mac, *hci_mac;
 
     void *on_disconnect_context;
     Void_VoidP_BleatGattP_Uint on_disconnect_handler;
@@ -53,6 +53,7 @@ private:
     mutex cv_m;
     unique_lock<mutex> cv_lock;
     thread blepp_state_machine;
+    bool public_addr;
 };
 
 struct BleatGattChar_Blepp : public BleatGattChar {
@@ -83,10 +84,18 @@ private:
 };
 
 BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
-    const char *mac = nullptr, *device = nullptr;
+    const char *mac = nullptr, *hci_mac = nullptr;
+    bool public_addr = false;
     unordered_map<string, function<void(const char*)>> arg_processors = {
         {"mac", [&mac](const char* value) { mac = value; }}, 
-        {"hci", [&device](const char* value) { device = value; }}
+        {"hci", [&hci_mac](const char* value) { hci_mac = value; }},
+        {"address-type", [&public_addr](const char* value) {
+            if (!strcmp(value, "public")) {
+                public_addr = true;
+            } else if (strcmp(value, "random")) {
+                throw runtime_error("invalid value for \'address-type\' option (blepp api): one of [public, random]");
+            }
+        }},
     };
 
     for(int i = 0; i < nopts; i++) {
@@ -97,13 +106,13 @@ BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
         (it->second)(opts[i].value);
     }
     if (mac == nullptr) {
-        throw runtime_error("option 'mac' was not set");
+        throw runtime_error("required option 'mac' was not set");
     }
 
-    return new BleatGatt_Blepp(mac, device);
+    return new BleatGatt_Blepp(mac, hci_mac, public_addr);
 }
 
-BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* device) : mac(mac), device(device), cv_lock(cv_m) {
+BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr) : mac(mac), hci_mac(hci_mac), cv_lock(cv_m), public_addr(public_addr) {
     gatt.cb_connected = [this]() {
         gatt.read_primary_services();
     };
@@ -173,7 +182,7 @@ void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
             return status;
         };
 
-        gatt.connect(mac, false, false, device == nullptr ? "" : device);
+        gatt.connect(mac, false, public_addr, hci_mac == nullptr ? "" : hci_mac);
         timeval connect_timeout = { 10, 0 };
         int status = socket_select(&connect_timeout);
         if (status <= 0) {

@@ -74,7 +74,7 @@ struct EqualFn {
 
 
 struct BleatGatt_Win10 : public BleatGatt {
-    BleatGatt_Win10(const char* mac);
+    BleatGatt_Win10(const char* mac, BluetoothAddressType addr_type);
     virtual ~BleatGatt_Win10();
 
     virtual void connect_async(void* context, Void_VoidP_BleatGattP_CharP handler);
@@ -94,14 +94,25 @@ private:
     concurrency::task<void> discover_task, connect_task;
 
     BluetoothLEDevice^ device;
+    BluetoothAddressType addr_type;
     Windows::Foundation::EventRegistrationToken cookie;
     unordered_map<Guid, BleatGattChar_Win10*, Hasher, EqualFn> characteristics;
 };
 
 BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
     const char* mac = nullptr;
+    BluetoothAddressType addr_type = BluetoothAddressType::Random;
     unordered_map<string, function<void(const char*)>> arg_processors = {
-        { "mac", [&mac](const char* value) {mac = value; } }
+        { "mac", [&mac](const char* value) {mac = value; } },
+        {"address-type", [&addr_type](const char* value) {
+            if (!strcmp(value, "public")) {
+                addr_type = BluetoothAddressType::Public;
+            } else if (!strcmp(value, "unspecified")) {
+                addr_type = BluetoothAddressType::Unspecified;
+            } else if (strcmp(value, "random")) {
+                throw runtime_error("invalid value for \'address-type\' option (win10 api): one of [public, random, unspecified]");
+            }
+        }}
     };
 
     for (int i = 0; i < nopts; i++) {
@@ -118,7 +129,7 @@ BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
     return new BleatGatt_Win10(mac);
 }
 
-BleatGatt_Win10::BleatGatt_Win10(const char* mac) : mac(nullptr), device(nullptr), on_disconnect_context(nullptr), on_disconnect_handler(nullptr) {
+BleatGatt_Win10::BleatGatt_Win10(const char* mac, BluetoothAddressType addr_type) : mac(mac), device(nullptr), on_disconnect_context(nullptr), on_disconnect_handler(nullptr), addr_type(addr_type) {
     
 }
 
@@ -142,7 +153,7 @@ void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
 
         size_t temp;
         uint64_t mac_ulong = stoull(mac_copy.c_str(), &temp, 16);
-        discover_task = create_task(BluetoothLEDevice::FromBluetoothAddressAsync(mac_ulong)).then([discover_device_event, this](BluetoothLEDevice^ device) {
+        discover_task = create_task(BluetoothLEDevice::FromBluetoothAddressAsync(mac_ulong, addr_type)).then([discover_device_event, this](BluetoothLEDevice^ device) {
             cookie = device->ConnectionStatusChanged += ref new TypedEventHandler<BluetoothLEDevice^, Object^>([this](BluetoothLEDevice^ sender, Object^ args) {
                 switch (sender->ConnectionStatus) {
                 case BluetoothConnectionStatus::Disconnected:
