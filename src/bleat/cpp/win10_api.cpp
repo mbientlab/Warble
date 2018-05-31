@@ -180,7 +180,7 @@ void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
 
     connect_task = event_set.then([this]() {
         return create_task(device->GetGattServicesAsync());
-    }).then([](GattDeviceServicesResult^ result) {
+    }).then([this](GattDeviceServicesResult^ result) {
         vector<task<GattCharacteristicsResult^>> find_gattchar_tasks;
         if (result->Status == GattCommunicationStatus::Success) {
             for (auto it : result->Services) {
@@ -246,7 +246,6 @@ void BleatGatt_Win10::on_disconnect(void* context, Void_VoidP_BleatGattP_Uint ha
 
 BleatGattChar* BleatGatt_Win10::find_characteristic(const string& uuid) {
     UUID_TO_GUID(uuid);
-    HRESULT hr = IIDFromString(casted->Data(), &rawguid);
 
     if (SUCCEEDED(hr)) {
         auto it = characteristics.find(rawguid);
@@ -256,8 +255,7 @@ BleatGattChar* BleatGatt_Win10::find_characteristic(const string& uuid) {
 }
 
 bool BleatGatt_Win10::service_exists(const string& uuid) {
-    UUID_TO_GUID(uuid);
-    HRESULT hr = IIDFromString(casted->Data(), &rawguid);
+    UUID_TO_GUID(uuid);    
 
     if (SUCCEEDED(hr)) {
         return services.count(rawguid);
