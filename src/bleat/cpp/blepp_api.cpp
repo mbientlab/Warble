@@ -37,7 +37,7 @@ struct BleatGatt_Blepp : public BleatGatt {
 private:
     friend BleatGattChar_Blepp;
     
-    string *mac, *hci_mac;
+    string mac, hci_mac;
 
     void *on_disconnect_context;
     Void_VoidP_BleatGattP_Int on_disconnect_handler;
@@ -82,7 +82,7 @@ private:
 };
 
 BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
-    const char *mac = nullptr, *hci_mac = nullptr;
+    const char *mac = nullptr, *hci_mac = "";
     bool public_addr = false;
     unordered_map<string, function<void(const char*)>> arg_processors = {
         {"mac", [&mac](const char* value) { mac = value; }}, 
@@ -198,7 +198,7 @@ void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
             return status;
         };
 
-        gatt.connect(mac, false, public_addr, hci_mac == nullptr ? "" : hci_mac);
+        gatt.connect(mac, false, public_addr, hci_mac);
         timeval connect_timeout = { 10, 0 };
         int status = socket_select(&connect_timeout);
         if (status <= 0) {
