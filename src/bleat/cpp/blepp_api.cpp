@@ -121,6 +121,8 @@ BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* hci_mac, bool publ
         gatt.find_all_characteristics();
     };
     gatt.cb_write_response = [this]() {
+        active_char->gatt_op_error_handler = nullptr;
+        active_char = nullptr;
         write_handler(write_context, active_char, nullptr);
     };
 }
