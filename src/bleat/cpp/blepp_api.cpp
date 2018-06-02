@@ -37,7 +37,7 @@ struct BleatGatt_Blepp : public BleatGatt {
 private:
     friend BleatGattChar_Blepp;
     
-    const char *mac, *hci_mac;
+    string *mac, *hci_mac;
 
     void *on_disconnect_context;
     Void_VoidP_BleatGattP_Int on_disconnect_handler;

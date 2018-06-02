@@ -88,7 +88,7 @@ struct BleatGatt_Win10 : public BleatGatt {
 private:
     void cleanup();
 
-    const char* mac;
+    string mac;
 
     void *on_disconnect_context;
     Void_VoidP_BleatGattP_Int on_disconnect_handler;
@@ -133,7 +133,6 @@ BleatGatt* bleatgatt_create(int32_t nopts, const BleatOption* opts) {
 }
 
 BleatGatt_Win10::BleatGatt_Win10(const char* mac, BluetoothAddressType addr_type) : mac(mac), device(nullptr), on_disconnect_context(nullptr), on_disconnect_handler(nullptr), addr_type(addr_type) {
-    
 }
 
 BleatGatt_Win10::~BleatGatt_Win10() {
