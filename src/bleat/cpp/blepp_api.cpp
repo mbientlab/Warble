@@ -7,6 +7,7 @@
 #include "gattchar_def.h"
 #include "error_messages.h"
 
+#include "blepp_utils.h"
 #include "blepp/blestatemachine.h"
 #include "blepp/pretty_printers.h"
 
@@ -133,20 +134,6 @@ BleatGatt_Blepp::~BleatGatt_Blepp() {
     for(auto it: characteristics) {
         delete it.second;
     }
-}
-
-static inline string uuid_to_string(const UUID& uuid) {
-    char buffer[37];
-    switch(uuid.type) {
-    case BT_UUID16:
-        sprintf(buffer, "0000%.4x-0000-1000-8000-00805f9b34fb", uuid.value.u16);
-        return buffer;
-    case BT_UUID32:
-        sprintf(buffer, "%.8x-0000-1000-8000-00805f9b34fb", uuid.value.u32);
-        return buffer;
-    default:
-        return to_str(uuid);
-    }   
 }
 
 void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP handler) {

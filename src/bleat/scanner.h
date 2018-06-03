@@ -17,6 +17,9 @@ BLEAT_API void bleat_scanner_set_handler(void* context, Void_VoidP_BleatScanResu
 BLEAT_API void bleat_scanner_start(BLEAT_INT nopts, const BleatOption* opts);
 BLEAT_API void bleat_scanner_stop();
 
+BLEAT_API const BleatScanMftData* bleat_scan_result_get_manufacturer_data(const BleatScanResult* result, BLEAT_USHORT company_id);
+BLEAT_API BLEAT_INT bleat_scan_result_has_service_uuid(const BleatScanResult* result, const char* uuid);
+
 #ifdef __cplusplus
 }
 #endif

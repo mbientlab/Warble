@@ -5,9 +5,11 @@
 
 #include "scanner_def.h"
 
+#include "blepp_utils.h"
 #include "blepp/blestatemachine.h"
 #include "blepp/lescan.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <thread>
@@ -28,7 +30,8 @@ public:
 
 private:
     BLEPP::HCIScanner* scanner;
-    std::unordered_map<std::string, std::string> seen_devices;
+    unordered_map<string, BleatScanPrivateData> seen_devices;
+    unordered_map<string, string> device_names;
 
     void* scan_result_context;
     Void_VoidP_BleatScanResultP scan_result_handler;
@@ -52,6 +55,9 @@ void BleatScanner_Blepp::set_handler(void* context, Void_VoidP_BleatScanResultP 
     scan_result_handler = handler;
 }
 
+#include <iostream>
+using std::cout;
+using std::endl;
 void BleatScanner_Blepp::start(int32_t nopts, const BleatOption* opts) {
     if (scanner != nullptr) {
         return;
@@ -71,7 +77,6 @@ void BleatScanner_Blepp::start(int32_t nopts, const BleatOption* opts) {
 
     thread th([this, device]() {
         terminate_scan = false;
-        seen_devices.clear();
         scanner = new HCIScanner(true, HCIScanner::FilterDuplicates::Off, HCIScanner::ScanType::Active, device);
 
         while (!terminate_scan) {
@@ -88,40 +93,40 @@ void BleatScanner_Blepp::start(int32_t nopts, const BleatOption* opts) {
                     for (const auto& ad : scanner->get_advertisements()) {
                         auto it = seen_devices.find(ad.address);
                         if (it == seen_devices.end()) {
-                            if (ad.type != LeAdvertisingEventType::SCAN_RSP && ad.local_name) {
-                                seen_devices.emplace(ad.address, ad.local_name->name);
+                            BleatScanPrivateData private_data;
+                            seen_devices.emplace(ad.address, private_data);
+                            it = seen_devices.find(ad.address);
+                        }
+
+                        if (ad.type != LeAdvertisingEventType::SCAN_RSP && ad.local_name) {
+                            device_names.emplace(ad.address, ad.local_name->name);
+
+                            it->second.service_uuids.clear();
+                            for(const auto& uuid: ad.UUIDs) {
+                                it->second.service_uuids.insert(uuid_to_string(uuid));
                             }
-                        } else {
-                            if (ad.type == LeAdvertisingEventType::SCAN_RSP) {
-                                BleatScanMftData *manufacturer_data;
-                                int i = 0;
+                        } else if (ad.type == LeAdvertisingEventType::SCAN_RSP) {
+                            it->second.manufacturer_data.clear();
 
-                                if (!ad.manufacturer_specific_data.empty()) {
-                                    manufacturer_data = new BleatScanMftData[ad.manufacturer_specific_data.size()];
-
-                                    for (const auto& it : ad.manufacturer_specific_data) {
-                                        manufacturer_data[i].value = it.data() + 2;
-                                        manufacturer_data[i].value_size = it.size() - 2;
-                                        manufacturer_data[i].company_id = *((const uint16_t*)it.data());
-                                        i++;
-                                    }
-                                } else {
-                                    manufacturer_data = nullptr;
+                            if (!ad.manufacturer_specific_data.empty()) {
+                                for (const auto& data_it : ad.manufacturer_specific_data) {
+                                    BleatScanMftData data = {
+                                        data_it.data() + 2,
+                                        static_cast<uint32_t>(data_it.size() - 2)
+                                    };
+                                    it->second.manufacturer_data.emplace(*((uint16_t*) data_it.data()), data);
                                 }
+                            }
 
+                            if (scan_result_handler != nullptr) {
+                                auto name_it = device_names.find(ad.address);
                                 BleatScanResult result = {
-                                    it->first.c_str(),
-                                    it->second.c_str(),
-                                    manufacturer_data,
-                                    i,
-                                    (int32_t)ad.rssi,
+                                    ad.address.c_str(),
+                                    ad.local_name ? ad.local_name->name.c_str() : (name_it == device_names.end() ? "unknown" : name_it->second.c_str()),
+                                    (int32_t) ad.rssi,
+                                    &it->second
                                 };
-
-                                if (scan_result_handler != nullptr) {
-                                    scan_result_handler(scan_result_context, &result);
-                                }
-
-                                delete[] manufacturer_data;
+                                scan_result_handler(scan_result_context, &result);
                             }
                         }
                     }
@@ -140,6 +145,8 @@ void BleatScanner_Blepp::stop() {
 
     delete scanner;
     scanner = nullptr;
+    seen_devices.clear();
+    device_names.clear()
 }
 
 #endif

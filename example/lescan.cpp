@@ -28,17 +28,22 @@ int main(int argc, char** argv) {
         cout << "name: " << result->name << endl;
         cout << "rssi: " << result->rssi << " dBm" << endl;
 
-        for (int i = 0; i < result->manufacturer_data_size; i++) {
-            cout << hex << "    company id: 0x" << result->manufacturer_data[i].company_id << endl;
-            cout << "    value: [";
+        cout << "metawear service? " << bleat_scan_result_has_service_uuid(result, "326a9000-85cb-9195-d9dd-464cfbbae75a") << endl;
+        cout << "mbientlab manufacturer data? ";
 
-            for (int j = 0; j < result->manufacturer_data[i].value_size; j++) {
+        const BleatScanMftData* man_data;
+        if ((man_data = bleat_scan_result_get_manufacturer_data(result, 0x626d)) != nullptr) {
+            cout << endl << "    value: [";
+
+            for (int j = 0; j < man_data->value_size; j++) {
                 if (j != 0) {
                     cout << ", ";
                 }
-                cout << "0x" << (int)result->manufacturer_data[i].value[j];
+                cout << "0x" << (int)man_data->value[j];
             }
             cout << "]" << dec << endl;
+        } else {
+            cout << "false" << endl;
         }
 
         cout << "------" << endl;
