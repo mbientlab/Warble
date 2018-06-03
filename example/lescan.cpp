@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
         cout << "------" << endl;
     });
     
-    bleat_scanner_start();
+    bleat_scanner_start(0, nullptr);
     cv.wait(lock);
 
     bleat_scanner_stop();

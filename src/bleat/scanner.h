@@ -13,9 +13,8 @@
 extern "C" {
 #endif
 
-BLEAT_API void bleat_scanner_configure(BLEAT_INT nopts, const BleatOption* opts);
 BLEAT_API void bleat_scanner_set_handler(void* context, Void_VoidP_BleatScanResultP handler);
-BLEAT_API void bleat_scanner_start();
+BLEAT_API void bleat_scanner_start(BLEAT_INT nopts, const BleatOption* opts);
 BLEAT_API void bleat_scanner_stop();
 
 #ifdef __cplusplus
