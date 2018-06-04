@@ -146,7 +146,7 @@ void BleatScanner_Blepp::stop() {
     delete scanner;
     scanner = nullptr;
     seen_devices.clear();
-    device_names.clear()
+    device_names.clear();
 }
 
 #endif
