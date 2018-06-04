@@ -1,3 +1,5 @@
+#ifdef API_BLEPP
+
 #include "blepp_utils.h"
 #include "blepp/pretty_printers.h"
 
@@ -17,3 +19,5 @@ string uuid_to_string(const UUID& uuid) {
         return to_str(uuid);
     }   
 }
+
+#endif

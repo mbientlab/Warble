@@ -27,7 +27,6 @@
     <ClInclude Include="..\src\bleat\cpp\gattchar_def.h" />
     <ClInclude Include="..\src\bleat\cpp\gatt_def.h" />
     <ClInclude Include="..\src\bleat\cpp\scanner_def.h" />
-    <ClInclude Include="..\src\bleat\cpp\win10_scanner.h" />
     <ClInclude Include="..\src\bleat\dllmarker.h" />
     <ClInclude Include="..\src\bleat\gatt.h" />
     <ClInclude Include="..\src\bleat\gattchar.h" />
