@@ -55,9 +55,6 @@ void BleatScanner_Blepp::set_handler(void* context, Void_VoidP_BleatScanResultP 
     scan_result_handler = handler;
 }
 
-#include <iostream>
-using std::cout;
-using std::endl;
 void BleatScanner_Blepp::start(int32_t nopts, const BleatOption* opts) {
     if (scanner != nullptr) {
         return;

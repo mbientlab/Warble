@@ -34,3 +34,11 @@ void bleat_gattchar_disable_notifications_async(BleatGattChar* obj, void* contex
 void bleat_gattchar_set_value_changed_handler(BleatGattChar* obj, void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler) {
     obj->set_value_changed_handler(context, handler);
 }
+
+const char* bleat_gattchar_get_uuid(const BleatGattChar* obj) {
+    return obj->get_uuid();
+}
+
+BleatGatt* bleat_gattchar_get_gatt(const BleatGattChar* obj) {
+    return obj->get_gatt();
+}

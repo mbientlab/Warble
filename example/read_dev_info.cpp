@@ -20,11 +20,12 @@ static void read_char_values(BleatGatt* gatt) {
     auto next = uuids.front();
     auto gatt_char = bleat_gatt_find_characteristic(gatt, next);
 
-    cout << next;
     if (gatt_char == nullptr) {
-        cout << ": not found " << endl;
+        cout << next << ": not found " << endl;
     } else {
-        bleat_gattchar_read_async(gatt_char, gatt, [](void* context, BleatGattChar* gatt_char, const uint8_t* value, uint8_t length, const char* error) {
+        bleat_gattchar_read_async(gatt_char, nullptr, [](void* context, BleatGattChar* caller, const uint8_t* value, uint8_t length, const char* error) {
+            cout << bleat_gattchar_get_uuid(caller);
+            
             if (error != nullptr) {
                 cout << ": error reading value (" << error << ")" << endl;
             } else {
@@ -34,7 +35,7 @@ static void read_char_values(BleatGatt* gatt) {
             BleatGatt* gatt = (BleatGatt*) context;
             uuids.pop();
 
-            read_char_values(gatt);
+            read_char_values(bleat_gattchar_get_gatt(caller));
         });
     }
 }

@@ -69,11 +69,14 @@ struct BleatGattChar_Blepp : public BleatGattChar {
     virtual void disable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
     virtual void set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
 
+    virtual const char* get_uuid() const;
+    virtual BleatGatt* get_gatt() const;
 private:
     friend BleatGatt_Blepp;
     
     BleatGatt_Blepp* owner;
     Characteristic& ble_char;
+    char uuid_str[37];
 
     void *read_context, *value_changed_context;
     Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP read_handler;
@@ -233,6 +236,9 @@ BleatGattChar_Blepp::BleatGattChar_Blepp(BleatGatt_Blepp* owner, BLEPP::Characte
     ble_char.cb_notify_or_indicate = [this](const PDUNotificationOrIndication& n) {
         value_changed_handler(value_changed_context, this, n.value().first, n.value().second - n.value().first);
     };
+
+    string str = uuid_to_string(ble_char.uuid);
+    strcpy(uuid_str, str.c_str());
 }
 
 BleatGattChar_Blepp::~BleatGattChar_Blepp() {
@@ -370,6 +376,14 @@ void BleatGattChar_Blepp::disable_notifications_async(void* context, Void_VoidP_
 void BleatGattChar_Blepp::set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler) {
     value_changed_context = context;
     value_changed_handler = handler;
+}
+
+const char* BleatGattChar_Blepp::get_uuid() const {
+    return uuid_str;
+}
+
+BleatGatt* BleatGattChar_Blepp::get_gatt() const {
+    return owner;
 }
 
 #endif
