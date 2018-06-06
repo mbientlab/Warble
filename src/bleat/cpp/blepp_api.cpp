@@ -36,6 +36,8 @@ struct BleatGatt_Blepp : public BleatGatt {
     virtual bool service_exists(const std::string& uuid);
 
 private:
+    void clear_characteristics();
+
     friend BleatGattChar_Blepp;
     
     string mac, hci_mac;
@@ -114,7 +116,8 @@ BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
     return new BleatGatt_Blepp(mac, hci_mac, public_addr);
 }
 
-BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr) : mac(mac), hci_mac(hci_mac), public_addr(public_addr) {
+BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr) : 
+        mac(mac), hci_mac(hci_mac), on_disconnect_context(nullptr), on_disconnect_handler(nullptr), active_char(nullptr), public_addr(public_addr) {
     gatt.cb_connected = [this]() {
         gatt.read_primary_services();
     };
@@ -134,9 +137,14 @@ BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* hci_mac, bool publ
 BleatGatt_Blepp::~BleatGatt_Blepp() {
     gatt.close();
 
+    clear_characteristics();
+}
+
+void BleatGatt_Blepp::clear_characteristics() {
     for(auto it: characteristics) {
         delete it.second;
     }
+    characteristics.clear();
 }
 
 void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP handler) {
@@ -154,7 +162,7 @@ void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
         };
         gatt.cb_get_client_characteristic_configuration = [this, context, handler]() {
             services.clear();
-            characteristics.clear();
+            clear_characteristics();
 
             for(auto& service: gatt.primary_services) {
                 services.insert(uuid_to_string(service.uuid));
@@ -231,6 +239,8 @@ bool BleatGatt_Blepp::service_exists(const std::string& uuid) {
 
 BleatGattChar_Blepp::BleatGattChar_Blepp(BleatGatt_Blepp* owner, BLEPP::Characteristic& ble_char) : owner(owner), ble_char(ble_char) {
     ble_char.cb_read = [this](const PDUReadResponse& r) {
+        this->owner->active_char->gatt_op_error_handler = nullptr;
+        this->owner->active_char = nullptr;
         read_handler(read_context, this, r.value().first, r.value().second - r.value().first, nullptr);
     };
     ble_char.cb_notify_or_indicate = [this](const PDUNotificationOrIndication& n) {
