@@ -55,7 +55,7 @@ private:
     unordered_set<string> services;
 
     thread blepp_state_machine;
-    bool public_addr;
+    bool public_addr, connected;
 };
 
 struct BleatGattChar_Blepp : public BleatGattChar {
@@ -120,6 +120,7 @@ BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
 BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr) : 
         mac(mac), hci_mac(hci_mac), on_disconnect_context(nullptr), on_disconnect_handler(nullptr), active_char(nullptr), public_addr(public_addr) {
     gatt.cb_connected = [this]() {
+        connected = true;
         gatt.read_primary_services();
     };
     gatt.cb_find_characteristics = [this]() {
@@ -154,6 +155,7 @@ void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
         int dc_code;
 
         gatt.cb_disconnected = [this, &terminate, &dc_code](BLEGATTStateMachine::Disconnect d) {
+            connected = false;
             if (active_char != nullptr && active_char->gatt_op_error_handler != nullptr) {
                 active_char->gatt_op_error_handler(BLEGATTStateMachine::get_disconnect_string(d));
             }
@@ -230,7 +232,7 @@ void BleatGatt_Blepp::on_disconnect(void* context, Void_VoidP_BleatGattP_Int han
 }
 
 bool BleatGatt_Blepp::is_connected() const {
-    return gatt.socket() != -1;
+    return connected;
 }
 
 BleatGattChar* BleatGatt_Blepp::find_characteristic(const std::string& uuid) const {
