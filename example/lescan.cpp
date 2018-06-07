@@ -1,27 +1,15 @@
 #include "bleat/scanner.h"
 #include "bleat/lib.h"
 
-#include <csignal>
-#include <condition_variable> // std::condition_variable
+#include <chrono>
 #include <iostream>
-#include <mutex>              // std::mutex, std::unique_lock
+#include <thread>
 
 using namespace std;
-
-static condition_variable cv;
-static void signal_handler(int signum) {
-    if (signum == SIGINT) {
-        cv.notify_all();
-    }
-}
 
 int main(int argc, char** argv) {
     cout << "bleat v" << bleat_lib_version() << endl;
     cout << "bleat config: " << bleat_lib_config() << endl;
-
-    mutex m;
-    unique_lock<std::mutex> lock(m);
-    signal(SIGINT, signal_handler);
 
     bleat_scanner_set_handler(nullptr, [](void* context, const BleatScanResult* result) {
         cout << "mac: " << result->mac << endl;
@@ -50,7 +38,7 @@ int main(int argc, char** argv) {
     });
     
     bleat_scanner_start(0, nullptr);
-    cv.wait(lock);
+    this_thread::sleep_for(10s);
 
     bleat_scanner_stop();
     return 0;

@@ -67,69 +67,20 @@ int main(int argc, char** argv) {
 
     signal(SIGINT, signal_handler);
 
-    auto cgatt = bleat_gatt_create(argv[1]);
-    bleat_gatt_on_disconnect(cgatt, nullptr, [](void* context, BleatGatt* caller, int32_t status) {
-        cout << "i am disconnected: " << status << endl;
-        reconnect_handler = [](BleatGatt* gatt) {
-            cout << "connection established" << endl;
-        };
-        reconnect_async(caller);
-    });
-    bleat_gatt_connect_async(cgatt, nullptr, [](void* context, BleatGatt* caller, const char* value) {
+    auto gatt = bleat_gatt_create(argv[1]);
+    bleat_gatt_connect_async(gatt, nullptr, [](void* context, BleatGatt* caller, const char* value) {
         if (value != nullptr) {
             cout << "Error connecting: " << value << endl;
-            return;
+        } else {
+            cout << "Connected" << endl;
         }
-        auto cmd = bleat_gatt_find_characteristic(caller, "326a9001-85cb-9195-d9dd-464cfbbae75a");
-
-        uint8_t conn_param[] = { 0x11, 0x09, 0x06, 0x00, 0x06, 0x00, 0x00, 0x00, 0x58, 0x02 };
-        bleat_gattchar_write_async(cmd, conn_param, sizeof(conn_param), caller, [](void* context, BleatGattChar* caller, const char* value) {
-            cout << "you may proceed" << endl;
-
-            auto notify = bleat_gatt_find_characteristic((BleatGatt*)context, "326a9006-85cb-9195-d9dd-464cfbbae75a");
-            bleat_gattchar_set_value_changed_handler(notify, nullptr, [](void* context, BleatGattChar* caller, const uint8_t* value, uint8_t length) {
-                samples++;
-                cout << "samples = " << samples << endl;
-            });
-            bleat_gattchar_enable_notifications_async(notify, caller, [](void* context, BleatGattChar* caller, const char* value) {
-                /*
-                values.push({0x03, 0x03, 0x29, 0x0c});
-                values.push({0x03, 0x02, 0x01, 0x00});
-                values.push({0x03, 0x04, 0x01});
-
-                values.push({0x13, 0x03, 0x29, 0x00});
-                values.push({0x13, 0x05, 0x01});
-                values.push({0x13, 0x02, 0x01, 0x00});
-
-                values.push({0x03, 0x01, 0x01});
-                values.push({0x13, 0x01, 0x01});
-                */
-
-                values.push({ 0x1, 0x1, 0x1 });
-                write_values_handler = [](BleatGattChar* caller) {
-                    start = system_clock::now();
-                    cout << "ready" << endl;
-                };
-                write_values((BleatGattChar*)context);
-            });
-        });
-        this_thread::sleep_for(2s);
-    });
-
-    cv.wait(lock);
-
-    values.push({ 0xfe, 0x1 });
-    write_values_handler = [](BleatGattChar* caller) {
+        this_thread::sleep_for(5s);
         cv.notify_all();
-    };
-    write_values(bleat_gatt_find_characteristic(cgatt, "326a9001-85cb-9195-d9dd-464cfbbae75a"));
-    auto end = system_clock::now();
+    });
     cv.wait(lock);
 
-    cout << samples << endl;
-    duration<double> diff = end - start;
-    cout << diff.count() << endl;
-
-    bleat_gatt_disconnect(cgatt);
+    bleat_gatt_disconnect(gatt);
+    
+    cout << "disconnected" << endl;
     return 0;
 }

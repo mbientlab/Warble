@@ -28,7 +28,7 @@ using namespace Windows::Security::Cryptography;
 using namespace Platform;
 
 struct BleatGattChar_Win10 : public BleatGattChar {
-    BleatGattChar_Win10(Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic^ characteristic);
+    BleatGattChar_Win10(BleatGatt* owner, GattCharacteristic^ characteristic);
 
     virtual ~BleatGattChar_Win10();
 
@@ -41,6 +41,8 @@ struct BleatGattChar_Win10 : public BleatGattChar {
     virtual void disable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
     virtual void set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
 
+    virtual const char* get_uuid() const;
+    virtual BleatGatt* get_gatt() const;
 private:
     inline void write_inner_async(GattWriteOption option, const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler) {
         Array<byte>^ wrapper = ref new Array<byte>(len);
@@ -58,8 +60,10 @@ private:
         });
     }
 
+    BleatGatt* owner;
     GattCharacteristic^ characteristic;
     Windows::Foundation::EventRegistrationToken cookie;
+    string uuid_str;
 };
 
 struct Hasher {
@@ -72,7 +76,6 @@ struct EqualFn {
         return t1.Equals(t2);
     }
 };
-
 
 struct BleatGatt_Win10 : public BleatGatt {
     BleatGatt_Win10(const char* mac, BluetoothAddressType addr_type);
@@ -92,8 +95,6 @@ private:
 
     void *on_disconnect_context;
     Void_VoidP_BleatGattP_Int on_disconnect_handler;
-
-    concurrency::task<void> discover_task, connect_task;
 
     BluetoothLEDevice^ device;
     BluetoothAddressType addr_type;
@@ -155,29 +156,27 @@ void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
 
         size_t temp;
         uint64_t mac_ulong = stoull(mac_copy.c_str(), &temp, 16);
-        discover_task = create_task(BluetoothLEDevice::FromBluetoothAddressAsync(mac_ulong, addr_type)).then([discover_device_event, this](BluetoothLEDevice^ device) {
-            cookie = device->ConnectionStatusChanged += ref new TypedEventHandler<BluetoothLEDevice^, Object^>([this](BluetoothLEDevice^ sender, Object^ args) {
-                switch (sender->ConnectionStatus) {
-                case BluetoothConnectionStatus::Disconnected:
-                    if (on_disconnect_handler != nullptr) {
-                        on_disconnect_handler(on_disconnect_context, this, 0);
+        create_task(BluetoothLEDevice::FromBluetoothAddressAsync(mac_ulong, addr_type)).then([discover_device_event, this](BluetoothLEDevice^ device) {
+            if (device == nullptr) {
+                discover_device_event.set_exception(runtime_error("Failed to discover device (FromBluetoothAddressAsync returned nullptr)"));
+            } else {
+                cookie = device->ConnectionStatusChanged += ref new TypedEventHandler<BluetoothLEDevice^, Object^>([this](BluetoothLEDevice^ sender, Object^ args) {
+                    switch (sender->ConnectionStatus) {
+                    case BluetoothConnectionStatus::Disconnected:
+                        if (on_disconnect_handler != nullptr) {
+                            on_disconnect_handler(on_disconnect_context, this, 0);
+                        }
+                        break;
                     }
-                    break;
-                }
-            });
+                });
 
-            this->device = device;
-            discover_device_event.set();
-        }).then([discover_device_event](task<void> previous_task) {
-            try {
-                previous_task.get();
-            } catch (...) {
-                discover_device_event.set_exception(runtime_error("Failed to discover device"));
+                this->device = device;
+                discover_device_event.set();
             }
         });
     }
 
-    connect_task = event_set.then([this]() {
+    event_set.then([this]() {
         return create_task(device->GetGattServicesAsync());
     }).then([this](GattDeviceServicesResult^ result) {
         vector<task<GattCharacteristicsResult^>> find_gattchar_tasks;
@@ -195,7 +194,7 @@ void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
         for (auto it : results) {
             if (it->Status == GattCommunicationStatus::Success) {
                 for (auto it2 : it->Characteristics) {
-                    characteristics.emplace(it2->Uuid, new BleatGattChar_Win10(it2));
+                    characteristics.emplace(it2->Uuid, new BleatGattChar_Win10(this, it2));
                 }
             } else {
                 throw runtime_error("Failed to discover gatt characteristics");
@@ -224,9 +223,12 @@ void BleatGatt_Win10::cleanup() {
         delete it.second;
     }
     characteristics.clear();
+    services.clear();
 
-    device->ConnectionStatusChanged -= cookie;
-    device = nullptr;
+    if (device != nullptr) {
+        device->ConnectionStatusChanged -= cookie;
+        device = nullptr;
+    }
 }
 
 void BleatGatt_Win10::on_disconnect(void* context, Void_VoidP_BleatGattP_Int handler) {
@@ -262,8 +264,9 @@ bool BleatGatt_Win10::service_exists(const string& uuid) {
     return 0;
 }
 
-BleatGattChar_Win10::BleatGattChar_Win10(GattCharacteristic^ characteristic) : characteristic(characteristic) {
-
+BleatGattChar_Win10::BleatGattChar_Win10(BleatGatt* owner, GattCharacteristic^ characteristic) : owner(owner), characteristic(characteristic) {
+    wstring wide(characteristic->Uuid.ToString()->Data());
+    uuid_str = string(wide.begin(), wide.end()).substr(1, 36);
 }
 
 BleatGattChar_Win10::~BleatGattChar_Win10() {
@@ -320,6 +323,14 @@ void BleatGattChar_Win10::set_value_changed_handler(void* context, Void_VoidP_Bl
         CryptographicBuffer::CopyToByteArray(obj->CharacteristicValue, &wrapper);
         handler(context, this, (uint8_t*)wrapper->Data, wrapper->Length);
     });
+}
+
+const char* BleatGattChar_Win10::get_uuid() const {
+    return uuid_str.c_str();
+}
+
+BleatGatt* BleatGattChar_Win10::get_gatt() const {
+    return owner;
 }
 
 #endif
