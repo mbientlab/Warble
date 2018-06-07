@@ -20,9 +20,10 @@ BLEAT_API void bleat_gatt_delete(BleatGatt* obj);
 BLEAT_API void bleat_gatt_connect_async(BleatGatt* obj, void* context, Void_VoidP_BleatGattP_CharP handler);
 BLEAT_API void bleat_gatt_disconnect(BleatGatt* obj);
 BLEAT_API void bleat_gatt_on_disconnect(BleatGatt* obj, void* context, Void_VoidP_BleatGattP_Int handler);
+BLEAT_API BLEAT_INT bleat_gatt_is_connected(const BleatGatt* obj);
 
-BLEAT_API BleatGattChar* bleat_gatt_find_characteristic(BleatGatt* obj, const char* uuid);
-BLEAT_API BLEAT_INT bleat_gatt_has_service(BleatGatt* obj, const char* uuid);
+BLEAT_API BleatGattChar* bleat_gatt_find_characteristic(const BleatGatt* obj, const char* uuid);
+BLEAT_API BLEAT_INT bleat_gatt_has_service(const BleatGatt* obj, const char* uuid);
 
 #ifdef __cplusplus
 }

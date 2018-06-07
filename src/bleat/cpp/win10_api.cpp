@@ -84,9 +84,10 @@ struct BleatGatt_Win10 : public BleatGatt {
     virtual void connect_async(void* context, Void_VoidP_BleatGattP_CharP handler);
     virtual void disconnect();
     virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Int handler);
+    virtual bool is_connected() const;
 
-    virtual BleatGattChar* find_characteristic(const string& uuid);
-    virtual bool service_exists(const string& uuid);
+    virtual BleatGattChar* find_characteristic(const string& uuid) const;
+    virtual bool service_exists(const string& uuid) const;
 
 private:
     void cleanup();
@@ -236,6 +237,10 @@ void BleatGatt_Win10::on_disconnect(void* context, Void_VoidP_BleatGattP_Int han
     on_disconnect_handler = handler;
 }
 
+bool BleatGatt_Win10::is_connected() const {
+    return device != nullptr && device->ConnectionStatus == BluetoothConnectionStatus::Connected;
+}
+
 #define UUID_TO_GUID(uuid)\
     wstring wide_uuid(uuid.begin(), uuid.end());\
     wstringstream stream;\
@@ -245,7 +250,7 @@ void BleatGatt_Win10::on_disconnect(void* context, Void_VoidP_BleatGattP_Int han
     GUID rawguid;\
     HRESULT hr = IIDFromString(casted->Data(), &rawguid);
 
-BleatGattChar* BleatGatt_Win10::find_characteristic(const string& uuid) {
+BleatGattChar* BleatGatt_Win10::find_characteristic(const string& uuid) const {
     UUID_TO_GUID(uuid);
 
     if (SUCCEEDED(hr)) {
@@ -255,7 +260,7 @@ BleatGattChar* BleatGatt_Win10::find_characteristic(const string& uuid) {
     return nullptr;
 }
 
-bool BleatGatt_Win10::service_exists(const string& uuid) {
+bool BleatGatt_Win10::service_exists(const string& uuid) const {
     UUID_TO_GUID(uuid);    
 
     if (SUCCEEDED(hr)) {

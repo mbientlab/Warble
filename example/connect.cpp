@@ -47,20 +47,6 @@ static void write_values(BleatGattChar* gatt_char) {
     }
 }
 
-static function<void(BleatGatt*)> reconnect_handler;
-static void reconnect_async(BleatGatt* gatt) {
-    cerr << "Reconnecting..." << endl;
-    bleat_gatt_connect_async(gatt, nullptr, [](void* context, BleatGatt* gatt, const char* value) {
-        if (value == nullptr) {
-            reconnect_handler(gatt);
-        } else {
-            reconnect_async(gatt);
-        }
-    });
-}
-
-time_point<system_clock> start;
-
 int main(int argc, char** argv) {
     mutex m;
     unique_lock<std::mutex> lock(m);
@@ -71,9 +57,9 @@ int main(int argc, char** argv) {
     bleat_gatt_connect_async(gatt, nullptr, [](void* context, BleatGatt* caller, const char* value) {
         if (value != nullptr) {
             cout << "Error connecting: " << value << endl;
-        } else {
-            cout << "Connected" << endl;
         }
+        cout << "Connected? " << bleat_gatt_is_connected(caller) << endl;
+
         this_thread::sleep_for(5s);
         cv.notify_all();
     });
@@ -81,6 +67,6 @@ int main(int argc, char** argv) {
 
     bleat_gatt_disconnect(gatt);
     
-    cout << "disconnected" << endl;
+    cout << "Donnected? " << bleat_gatt_is_connected(gatt) << endl;
     return 0;
 }

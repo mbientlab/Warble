@@ -38,10 +38,14 @@ void bleat_gatt_on_disconnect(BleatGatt* obj, void* context, Void_VoidP_BleatGat
     obj->on_disconnect(context, handler);
 }
 
-BleatGattChar* bleat_gatt_find_characteristic(BleatGatt* obj, const char* uuid) {
+int32_t bleat_gatt_is_connected(const BleatGatt* obj) {
+    return obj->is_connected();
+}
+
+BleatGattChar* bleat_gatt_find_characteristic(const BleatGatt* obj, const char* uuid) {
     return obj->find_characteristic(uuid);
 }
 
-int32_t bleat_gatt_has_service(BleatGatt* obj, const char* uuid) {
+int32_t bleat_gatt_has_service(const BleatGatt* obj, const char* uuid) {
     return obj->service_exists(uuid);
 }

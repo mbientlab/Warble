@@ -31,9 +31,10 @@ struct BleatGatt_Blepp : public BleatGatt {
     virtual void connect_async(void* context, Void_VoidP_BleatGattP_CharP handler);
     virtual void disconnect();
     virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Int handler);
+    virtual bool is_connected() const;
 
-    virtual BleatGattChar* find_characteristic(const std::string& uuid);
-    virtual bool service_exists(const std::string& uuid);
+    virtual BleatGattChar* find_characteristic(const std::string& uuid) const;
+    virtual bool service_exists(const std::string& uuid) const;
 
 private:
     void clear_characteristics();
@@ -228,12 +229,16 @@ void BleatGatt_Blepp::on_disconnect(void* context, Void_VoidP_BleatGattP_Int han
     on_disconnect_handler = handler;
 }
 
-BleatGattChar* BleatGatt_Blepp::find_characteristic(const std::string& uuid) {
+bool BleatGatt_Blepp::is_connected() const {
+    return gatt.socket() != -1;
+}
+
+BleatGattChar* BleatGatt_Blepp::find_characteristic(const std::string& uuid) const {
     auto it = characteristics.find(uuid);
     return it == characteristics.end() ? nullptr : it->second;
 }
 
-bool BleatGatt_Blepp::service_exists(const std::string& uuid) {
+bool BleatGatt_Blepp::service_exists(const std::string& uuid) const {
     return services.count(uuid);
 }
 
