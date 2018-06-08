@@ -4,7 +4,9 @@ GEN:= $(GEN) $(M_DIR)/cpp/lib_def.h
 
 $(M_DIR)/cpp/lib.cpp: $(M_DIR)/cpp/lib_def.h
 
-.PHONY: $(M_DIR)/cpp/lib_def.h
+ifndef SKIP_VERSION
+    .PHONY: $(M_DIR)/cpp/lib_def.h
+endif
 $(M_DIR)/cpp/lib_def.h:
 	@echo '#pragma once' > $@
 	@echo '#define BLEAT_LIB_VERSION "$(VERSION)"' >> $@

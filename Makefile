@@ -2,9 +2,13 @@
 
 .PHONY: build clean doc publish install
 
-$(shell ./bin/generate_version.sh)
+VERSION_MK=version.mk
+ifndef SKIP_VERSION
+    $(shell ./bin/generate_version.sh $(VERSION_MK))
+endif
+
 include config.mk
-include version.mk
+include $(VERSION_MK)
 
 CXXFLAGS:=-std=c++14 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -DBLEAT_DLL -DBLEAT_DLL_EXPORT -Isrc 
 
@@ -94,7 +98,7 @@ $(BUILD_DIR)/$(PUBLISH_NAME): build
 	tar -rf $@ -C $(DIST_DIR) .
 
 clean:
-	rm -Rf $(BUILD_DIR) $(DIST_DIR) $(GEN)
+	rm -Rf $(BUILD_DIR) $(DIST_DIR) $(GEN) $(VERSION_MK)
 
 doc:
 	rm -Rf $(DOC_DIR)

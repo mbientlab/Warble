@@ -20,4 +20,4 @@ fi
 
 printf "VERSION=%s\nVERSION_MAJOR=%s\nVERSION_MINOR=%s\nVERSION_STEP=%s\n"\
         "${split[0]}.${split[1]}.${split[2]}"\
-        "${split[0]}" "${split[1]}" "${split[2]}" > version.mk
+        "${split[0]}" "${split[1]}" "${split[2]}" > $1
