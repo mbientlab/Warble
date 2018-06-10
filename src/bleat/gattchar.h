@@ -61,7 +61,7 @@ BLEAT_API void bleat_gattchar_disable_notifications_async(BleatGattChar* obj, vo
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when notifications are received
  */
-BLEAT_API void bleat_gattchar_set_value_changed_handler(BleatGattChar* obj, void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
+BLEAT_API void bleat_gattchar_on_notification_received(BleatGattChar* obj, void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
 
 /**
  * Gets the string representation of the characteristic's uuid

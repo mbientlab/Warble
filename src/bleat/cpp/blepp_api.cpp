@@ -70,7 +70,7 @@ struct BleatGattChar_Blepp : public BleatGattChar {
 
     virtual void enable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
     virtual void disable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
-    virtual void set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
+    virtual void on_notification_received(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
 
     virtual const char* get_uuid() const;
     virtual BleatGatt* get_gatt() const;
@@ -390,7 +390,7 @@ void BleatGattChar_Blepp::disable_notifications_async(void* context, Void_VoidP_
     }
 }
 
-void BleatGattChar_Blepp::set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler) {
+void BleatGattChar_Blepp::on_notification_received(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler) {
     value_changed_context = context;
     value_changed_handler = handler;
 }

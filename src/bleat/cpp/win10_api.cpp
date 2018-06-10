@@ -42,7 +42,7 @@ struct BleatGattChar_Win10 : public BleatGattChar {
 
     virtual void enable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
     virtual void disable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
-    virtual void set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
+    virtual void on_notification_received(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
 
     virtual const char* get_uuid() const;
     virtual BleatGatt* get_gatt() const;
@@ -325,7 +325,7 @@ void BleatGattChar_Win10::disable_notifications_async(void* context, Void_VoidP_
         });
 }
 
-void BleatGattChar_Win10::set_value_changed_handler(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler) {
+void BleatGattChar_Win10::on_notification_received(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler) {
     cookie = characteristic->ValueChanged += ref new TypedEventHandler<GattCharacteristic^, GattValueChangedEventArgs^>([context, handler, this](GattCharacteristic^ sender, GattValueChangedEventArgs^ obj) {
         Array<byte>^ wrapper = ref new Array<byte>(obj->CharacteristicValue->Length);
         CryptographicBuffer::CopyToByteArray(obj->CharacteristicValue, &wrapper);
