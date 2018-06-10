@@ -23,7 +23,10 @@
 
 #endif
 
+/**
+ * Simple string pair used to configure the API
+ */
 typedef struct {
-    const char* key;
-    const char* value;
+    const char* key;            ///< Option identifier
+    const char* value;          ///< Option value
 } BleatOption;

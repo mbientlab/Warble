@@ -1,3 +1,6 @@
+/**
+ * @copyright MbientLab License
+ */
 #ifdef API_BLEPP
 
 #include "blepp_utils.h"

@@ -1,3 +1,6 @@
+/**
+ * @copyright MbientLab License
+ */
 #ifdef API_WIN10
 
 #include "scanner_def.h"

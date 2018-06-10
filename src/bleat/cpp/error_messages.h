@@ -1,3 +1,6 @@
+/**
+ * @copyright MbientLab License
+ */
 #pragma once
 
 const char* BLEAT_CONNECT_TIMEOUT = "Timed out while trying to connect to remote device";
