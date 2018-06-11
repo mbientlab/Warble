@@ -2,7 +2,7 @@
  * @copyright MbientLab License
  */
 
-#include "bleat/lib.h"
+#include "warble/lib.h"
 #include "lib_def.h"
 
 #ifdef API_BLEPP
@@ -23,15 +23,15 @@ using namespace std;
 static Microsoft::WRL::Wrappers::RoInitializeWrapper initialize(RO_INIT_MULTITHREADED);
 #endif
 
-const char* bleat_lib_version() {
-    return BLEAT_LIB_VERSION;
+const char* warble_lib_version() {
+    return WARBLE_LIB_VERSION;
 }
 
-const char* bleat_lib_config() {
-    return BLEAT_LIB_CONFIG;
+const char* warble_lib_config() {
+    return WARBLE_LIB_CONFIG;
 }
 
-void bleat_lib_init(int32_t nopts, const BleatOption* opts) {
+void warble_lib_init(int32_t nopts, const WarbleOption* opts) {
 #ifdef API_BLEPP
     unordered_map<string, function<void(const char*)>> arg_processors = {
         {"log-level", [](const char* value) {

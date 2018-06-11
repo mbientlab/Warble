@@ -19,43 +19,43 @@
 using namespace std;
 using namespace BLEPP;
 
-class BleatScanner_Blepp : public BleatScanner {
+class WarbleScanner_Blepp : public WarbleScanner {
 public:
-    BleatScanner_Blepp();
-    virtual ~BleatScanner_Blepp();
+    WarbleScanner_Blepp();
+    virtual ~WarbleScanner_Blepp();
 
-    virtual void set_handler(void* context, Void_VoidP_BleatScanResultP handler);
-    virtual void start(BLEAT_INT nopts, const BleatOption* opts);
+    virtual void set_handler(void* context, Void_VoidP_WarbleScanResultP handler);
+    virtual void start(WARBLE_INT nopts, const WarbleOption* opts);
     virtual void stop();
 
 private:
     BLEPP::HCIScanner* scanner;
-    unordered_map<string, BleatScanPrivateData> seen_devices;
+    unordered_map<string, WarbleScanPrivateData> seen_devices;
     unordered_map<string, string> device_names;
 
     void* scan_result_context;
-    Void_VoidP_BleatScanResultP scan_result_handler;
+    Void_VoidP_WarbleScanResultP scan_result_handler;
     std::thread scan_thread;
     bool terminate_scan;
 };
 
-BleatScanner* bleat_scanner_create() {
-    return new BleatScanner_Blepp();
+WarbleScanner* warble_scanner_create() {
+    return new WarbleScanner_Blepp();
 }
 
-BleatScanner_Blepp::BleatScanner_Blepp() : scanner(nullptr), scan_result_context(nullptr), scan_result_handler(nullptr) {
+WarbleScanner_Blepp::WarbleScanner_Blepp() : scanner(nullptr), scan_result_context(nullptr), scan_result_handler(nullptr) {
 }
 
-BleatScanner_Blepp::~BleatScanner_Blepp() {
+WarbleScanner_Blepp::~WarbleScanner_Blepp() {
     stop();
 }
 
-void BleatScanner_Blepp::set_handler(void* context, Void_VoidP_BleatScanResultP handler) {
+void WarbleScanner_Blepp::set_handler(void* context, Void_VoidP_WarbleScanResultP handler) {
     scan_result_context = context;
     scan_result_handler = handler;
 }
 
-void BleatScanner_Blepp::start(int32_t nopts, const BleatOption* opts) {
+void WarbleScanner_Blepp::start(int32_t nopts, const WarbleOption* opts) {
     if (scanner != nullptr) {
         return;
     }
@@ -90,7 +90,7 @@ void BleatScanner_Blepp::start(int32_t nopts, const BleatOption* opts) {
                     for (const auto& ad : scanner->get_advertisements()) {
                         auto it = seen_devices.find(ad.address);
                         if (it == seen_devices.end()) {
-                            BleatScanPrivateData private_data;
+                            WarbleScanPrivateData private_data;
                             seen_devices.emplace(ad.address, private_data);
                             it = seen_devices.find(ad.address);
                         }
@@ -107,7 +107,7 @@ void BleatScanner_Blepp::start(int32_t nopts, const BleatOption* opts) {
 
                             if (!ad.manufacturer_specific_data.empty()) {
                                 for (const auto& data_it : ad.manufacturer_specific_data) {
-                                    BleatScanMftData data = {
+                                    WarbleScanMftData data = {
                                         data_it.data() + 2,
                                         static_cast<uint32_t>(data_it.size() - 2)
                                     };
@@ -117,7 +117,7 @@ void BleatScanner_Blepp::start(int32_t nopts, const BleatOption* opts) {
 
                             if (scan_result_handler != nullptr) {
                                 auto name_it = device_names.find(ad.address);
-                                BleatScanResult result = {
+                                WarbleScanResult result = {
                                     ad.address.c_str(),
                                     ad.local_name ? ad.local_name->name.c_str() : (name_it == device_names.end() ? "unknown" : name_it->second.c_str()),
                                     (int32_t) ad.rssi,
@@ -136,7 +136,7 @@ void BleatScanner_Blepp::start(int32_t nopts, const BleatOption* opts) {
     swap(scan_thread, th);
 }
 
-void BleatScanner_Blepp::stop() {
+void WarbleScanner_Blepp::stop() {
     terminate_scan = true;
     scan_thread.join();
 

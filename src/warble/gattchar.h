@@ -1,7 +1,7 @@
 /**
  * @copyright MbientLab License
  * @file gattchar.h
- * @brief Bleat gatt characteristic functions
+ * @brief Warble gatt characteristic functions
  */
 #pragma once
 
@@ -22,7 +22,7 @@ extern "C" {
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when the async task has completed
  */
-BLEAT_API void bleat_gattchar_write_async(BleatGattChar* obj, const BLEAT_UBYTE* value, BLEAT_UBYTE len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
+WARBLE_API void warble_gattchar_write_async(WarbleGattChar* obj, const WARBLE_UBYTE* value, WARBLE_UBYTE len, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
 /**
  * Writes the value to the characteristic without requiring a response from the remote device
  * @param obj           Calling object
@@ -31,7 +31,7 @@ BLEAT_API void bleat_gattchar_write_async(BleatGattChar* obj, const BLEAT_UBYTE*
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when the async task has completed
  */
-BLEAT_API void bleat_gattchar_write_without_resp_async(BleatGattChar* obj, const BLEAT_UBYTE* value, BLEAT_UBYTE len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
+WARBLE_API void warble_gattchar_write_without_resp_async(WarbleGattChar* obj, const WARBLE_UBYTE* value, WARBLE_UBYTE len, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
 
 /**
  * Reads the current value of the characteristic from the remote device
@@ -39,7 +39,7 @@ BLEAT_API void bleat_gattchar_write_without_resp_async(BleatGattChar* obj, const
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when the async task has completed
  */
-BLEAT_API void bleat_gattchar_read_async(BleatGattChar* obj, void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP handler);
+WARBLE_API void warble_gattchar_read_async(WarbleGattChar* obj, void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler);
 
 /**
  * Enables notifications on the characteristic
@@ -47,34 +47,34 @@ BLEAT_API void bleat_gattchar_read_async(BleatGattChar* obj, void* context, Void
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when the async task has completed
  */
-BLEAT_API void bleat_gattchar_enable_notifications_async(BleatGattChar* obj, void* context, Void_VoidP_BleatGattCharP_CharP handler);
+WARBLE_API void warble_gattchar_enable_notifications_async(WarbleGattChar* obj, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
 /**
  * Disables notifications on the characteristic
  * @param obj           Calling object
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when the async task has completed
  */
-BLEAT_API void bleat_gattchar_disable_notifications_async(BleatGattChar* obj, void* context, Void_VoidP_BleatGattCharP_CharP handler);
+WARBLE_API void warble_gattchar_disable_notifications_async(WarbleGattChar* obj, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
 /**
  * Sets a handler to listen for characteristic notifications
  * @param obj           Calling object
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when notifications are received
  */
-BLEAT_API void bleat_gattchar_on_notification_received(BleatGattChar* obj, void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
+WARBLE_API void warble_gattchar_on_notification_received(WarbleGattChar* obj, void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte handler);
 
 /**
  * Gets the string representation of the characteristic's uuid
  * @param obj           Calling object
  * @return String representation of the 128-bit uuid
  */
-BLEAT_API const char* bleat_gattchar_get_uuid(const BleatGattChar* obj);
+WARBLE_API const char* warble_gattchar_get_uuid(const WarbleGattChar* obj);
 /**
- * Gets the BleatGatt object that the characteristic belongs to
+ * Gets the WarbleGatt object that the characteristic belongs to
  * @param obj           Calling object
- * @return Pointer to the owning BleatGatt object  
+ * @return Pointer to the owning WarbleGatt object  
  */
-BLEAT_API BleatGatt* bleat_gattchar_get_gatt(const BleatGattChar* obj);
+WARBLE_API WarbleGatt* warble_gattchar_get_gatt(const WarbleGattChar* obj);
 #ifdef __cplusplus
 }
 #endif

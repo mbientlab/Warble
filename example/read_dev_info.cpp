@@ -1,5 +1,5 @@
-// compile: g++ -o read_dev_info example/read_dev_info.cpp -std=c++14 -Isrc -Ldist/release/lib/x64 -Ldeps/libblepp -lbleat -lpthread -lble++
-#include "bleat/bleat.h"
+// compile: g++ -o read_dev_info example/read_dev_info.cpp -std=c++14 -Isrc -Ldist/release/lib/x64 -Ldeps/libblepp -lwarble -lpthread -lble++
+#include "warble/warble.h"
 
 #include <condition_variable>
 #include <functional>
@@ -19,13 +19,13 @@ static void read_char_values(BleatGatt* gatt) {
     }
 
     auto next = uuids.front();
-    auto gatt_char = bleat_gatt_find_characteristic(gatt, next);
+    auto gatt_char = warble_gatt_find_characteristic(gatt, next);
 
     if (gatt_char == nullptr) {
         cout << next << ": not found " << endl;
     } else {
-        bleat_gattchar_read_async(gatt_char, nullptr, [](void* context, BleatGattChar* caller, const uint8_t* value, uint8_t length, const char* error) {
-            cout << bleat_gattchar_get_uuid(caller);
+        warble_gattchar_read_async(gatt_char, nullptr, [](void* context, BleatGattChar* caller, const uint8_t* value, uint8_t length, const char* error) {
+            cout << warble_gattchar_get_uuid(caller);
             
             if (error != nullptr) {
                 cout << ": error reading value (" << error << ")" << endl;
@@ -36,7 +36,7 @@ static void read_char_values(BleatGatt* gatt) {
             BleatGatt* gatt = (BleatGatt*) context;
             uuids.pop();
 
-            read_char_values(bleat_gattchar_get_gatt(caller));
+            read_char_values(warble_gattchar_get_gatt(caller));
         });
     }
 }
@@ -47,9 +47,9 @@ int main(int argc, char** argv) {
     mutex m;
     unique_lock<std::mutex> lock(m);
 
-    auto gatt = bleat_gatt_create(argv[1]);
+    auto gatt = warble_gatt_create(argv[1]);
 
-    bleat_gatt_connect_async(gatt, nullptr, [](void* context, BleatGatt* caller, const char* error) {
+    warble_gatt_connect_async(gatt, nullptr, [](void* context, BleatGatt* caller, const char* error) {
         uuids.push("00002a26-0000-1000-8000-00805f9b34fb");
         uuids.push("00002a24-0000-1000-8000-00805f9b34fb");
         uuids.push("00002a27-0000-1000-8000-00805f9b34fb");

@@ -1,7 +1,7 @@
 # @copyright MbientLab License
 
-APP_NAME?=bleat
-MODULES?=bleat
+APP_NAME?=warble
+MODULES?=warble
 
 KERNEL?=$(shell uname -s)
 

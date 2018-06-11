@@ -151,7 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\bleat.vcxproj">
+    <ProjectReference Include="..\warble.vcxproj">
       <Project>{da949dc1-1ed3-45ca-8dca-128281e5c63b}</Project>
     </ProjectReference>
   </ItemGroup>

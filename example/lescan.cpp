@@ -1,5 +1,5 @@
-#include "bleat/scanner.h"
-#include "bleat/lib.h"
+#include "warble/scanner.h"
+#include "warble/lib.h"
 
 #include <chrono>
 #include <iostream>
@@ -8,19 +8,19 @@
 using namespace std;
 
 int main(int argc, char** argv) {
-    cout << "bleat v" << bleat_lib_version() << endl;
-    cout << "bleat config: " << bleat_lib_config() << endl;
+    cout << "warble v" << warble_lib_version() << endl;
+    cout << "warble config: " << warble_lib_config() << endl;
 
-    bleat_scanner_set_handler(nullptr, [](void* context, const BleatScanResult* result) {
+    warble_scanner_set_handler(nullptr, [](void* context, const BleatScanResult* result) {
         cout << "mac: " << result->mac << endl;
         cout << "name: " << result->name << endl;
         cout << "rssi: " << result->rssi << " dBm" << endl;
 
-        cout << "metawear service? " << bleat_scan_result_has_service_uuid(result, "326a9000-85cb-9195-d9dd-464cfbbae75a") << endl;
+        cout << "metawear service? " << warble_scan_result_has_service_uuid(result, "326a9000-85cb-9195-d9dd-464cfbbae75a") << endl;
         cout << "mbientlab manufacturer data? ";
 
         const BleatScanMftData* man_data;
-        if ((man_data = bleat_scan_result_get_manufacturer_data(result, 0x626d)) != nullptr) {
+        if ((man_data = warble_scan_result_get_manufacturer_data(result, 0x626d)) != nullptr) {
             cout << endl << "    value: [";
 
             for (int j = 0; j < man_data->value_size; j++) {
@@ -37,9 +37,9 @@ int main(int argc, char** argv) {
         cout << "------" << endl;
     });
     
-    bleat_scanner_start(0, nullptr);
+    warble_scanner_start(0, nullptr);
     this_thread::sleep_for(10s);
 
-    bleat_scanner_stop();
+    warble_scanner_stop();
     return 0;
 }

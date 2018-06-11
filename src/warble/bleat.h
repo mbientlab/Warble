@@ -1,7 +1,7 @@
 /**
  * @copyright MbientLab License
  * @file scanner.h
- * @brief Central header file to include all bleat related header files
+ * @brief Central header file to include all warble related header files
  */
 #pragma once
 

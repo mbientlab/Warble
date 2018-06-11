@@ -22,73 +22,73 @@
 using namespace std;
 using namespace BLEPP;
 
-struct BleatGattChar_Blepp;
+struct WarbleGattChar_Blepp;
 
-struct BleatGatt_Blepp : public BleatGatt {
-    BleatGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr);
-    virtual ~BleatGatt_Blepp();
+struct WarbleGatt_Blepp : public WarbleGatt {
+    WarbleGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr);
+    virtual ~WarbleGatt_Blepp();
 
-    virtual void connect_async(void* context, Void_VoidP_BleatGattP_CharP handler);
+    virtual void connect_async(void* context, Void_VoidP_WarbleGattP_CharP handler);
     virtual void disconnect();
-    virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Int handler);
+    virtual void on_disconnect(void* context, Void_VoidP_WarbleGattP_Int handler);
     virtual bool is_connected() const;
 
-    virtual BleatGattChar* find_characteristic(const std::string& uuid) const;
+    virtual WarbleGattChar* find_characteristic(const std::string& uuid) const;
     virtual bool service_exists(const std::string& uuid) const;
 
 private:
     void clear_characteristics();
 
-    friend BleatGattChar_Blepp;
+    friend WarbleGattChar_Blepp;
     
     string mac, hci_mac;
 
     void *on_disconnect_context;
-    Void_VoidP_BleatGattP_Int on_disconnect_handler;
+    Void_VoidP_WarbleGattP_Int on_disconnect_handler;
 
-    BleatGattChar_Blepp* active_char;
+    WarbleGattChar_Blepp* active_char;
     void* write_context;
-    Void_VoidP_BleatGattCharP_CharP write_handler;
+    Void_VoidP_WarbleGattCharP_CharP write_handler;
 
     BLEGATTStateMachine gatt;
-    unordered_map<string, BleatGattChar_Blepp*> characteristics;
+    unordered_map<string, WarbleGattChar_Blepp*> characteristics;
     unordered_set<string> services;
 
     thread blepp_state_machine;
     bool public_addr, connected;
 };
 
-struct BleatGattChar_Blepp : public BleatGattChar {
-    BleatGattChar_Blepp(BleatGatt_Blepp* owner, BLEPP::Characteristic& ble_char);
+struct WarbleGattChar_Blepp : public WarbleGattChar {
+    WarbleGattChar_Blepp(WarbleGatt_Blepp* owner, BLEPP::Characteristic& ble_char);
 
-    virtual ~BleatGattChar_Blepp();
+    virtual ~WarbleGattChar_Blepp();
 
-    virtual void write_async(const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
-    virtual void write_without_resp_async(const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
+    virtual void write_async(const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
+    virtual void write_without_resp_async(const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
 
-    virtual void read_async(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP handler);
+    virtual void read_async(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler);
 
-    virtual void enable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
-    virtual void disable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
-    virtual void on_notification_received(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
+    virtual void enable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler);
+    virtual void disable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler);
+    virtual void on_notification_received(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte handler);
 
     virtual const char* get_uuid() const;
-    virtual BleatGatt* get_gatt() const;
+    virtual WarbleGatt* get_gatt() const;
 private:
-    friend BleatGatt_Blepp;
+    friend WarbleGatt_Blepp;
     
-    BleatGatt_Blepp* owner;
+    WarbleGatt_Blepp* owner;
     Characteristic& ble_char;
     char uuid_str[37];
 
     void *read_context, *value_changed_context;
-    Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP read_handler;
-    Void_VoidP_BleatGattCharP_UbyteP_Ubyte value_changed_handler;
+    Void_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP read_handler;
+    Void_VoidP_WarbleGattCharP_UbyteP_Ubyte value_changed_handler;
 
     function<void(const char*)> gatt_op_error_handler;
 };
 
-BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
+WarbleGatt* warblegatt_create(std::int32_t nopts, const WarbleOption* opts) {
     const char *mac = nullptr, *hci_mac = "";
     bool public_addr = false;
     unordered_map<string, function<void(const char*)>> arg_processors = {
@@ -114,10 +114,10 @@ BleatGatt* bleatgatt_create(std::int32_t nopts, const BleatOption* opts) {
         throw runtime_error("required option 'mac' was not set");
     }
 
-    return new BleatGatt_Blepp(mac, hci_mac, public_addr);
+    return new WarbleGatt_Blepp(mac, hci_mac, public_addr);
 }
 
-BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr) : 
+WarbleGatt_Blepp::WarbleGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr) : 
         mac(mac), hci_mac(hci_mac), on_disconnect_context(nullptr), on_disconnect_handler(nullptr), active_char(nullptr), public_addr(public_addr) {
     gatt.cb_connected = [this]() {
         connected = true;
@@ -136,20 +136,20 @@ BleatGatt_Blepp::BleatGatt_Blepp(const char* mac, const char* hci_mac, bool publ
     };
 }
 
-BleatGatt_Blepp::~BleatGatt_Blepp() {
+WarbleGatt_Blepp::~WarbleGatt_Blepp() {
     gatt.close();
 
     clear_characteristics();
 }
 
-void BleatGatt_Blepp::clear_characteristics() {
+void WarbleGatt_Blepp::clear_characteristics() {
     for(auto it: characteristics) {
         delete it.second;
     }
     characteristics.clear();
 }
 
-void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP handler) {
+void WarbleGatt_Blepp::connect_async(void* context, Void_VoidP_WarbleGattP_CharP handler) {
     thread th([this, context, handler]() {
         bool terminate = false;
         int dc_code;
@@ -170,7 +170,7 @@ void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
             for(auto& service: gatt.primary_services) {
                 services.insert(uuid_to_string(service.uuid));
     	        for(auto& characteristic: service.characteristics) {
-                    characteristics.emplace(uuid_to_string(characteristic.uuid), new BleatGattChar_Blepp(this, characteristic));
+                    characteristics.emplace(uuid_to_string(characteristic.uuid), new WarbleGattChar_Blepp(this, characteristic));
                 }
             }
 
@@ -207,7 +207,7 @@ void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
         if (status <= 0) {
             terminate = true;
             gatt.close();
-            handler(context, this, status == 0 ? BLEAT_CONNECT_TIMEOUT : BLEAT_GATT_ERROR);
+            handler(context, this, status == 0 ? WARBLE_CONNECT_TIMEOUT : WARBLE_GATT_ERROR);
         } else {
             terminate = false;
             while(!terminate && socket_select(nullptr) > 0) {
@@ -222,29 +222,29 @@ void BleatGatt_Blepp::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
     swap(blepp_state_machine, th);
 }
 
-void BleatGatt_Blepp::disconnect() {
+void WarbleGatt_Blepp::disconnect() {
     gatt.close();
 }
 
-void BleatGatt_Blepp::on_disconnect(void* context, Void_VoidP_BleatGattP_Int handler) {
+void WarbleGatt_Blepp::on_disconnect(void* context, Void_VoidP_WarbleGattP_Int handler) {
     on_disconnect_context = context;
     on_disconnect_handler = handler;
 }
 
-bool BleatGatt_Blepp::is_connected() const {
+bool WarbleGatt_Blepp::is_connected() const {
     return connected;
 }
 
-BleatGattChar* BleatGatt_Blepp::find_characteristic(const std::string& uuid) const {
+WarbleGattChar* WarbleGatt_Blepp::find_characteristic(const std::string& uuid) const {
     auto it = characteristics.find(uuid);
     return it == characteristics.end() ? nullptr : it->second;
 }
 
-bool BleatGatt_Blepp::service_exists(const std::string& uuid) const {
+bool WarbleGatt_Blepp::service_exists(const std::string& uuid) const {
     return services.count(uuid);
 }
 
-BleatGattChar_Blepp::BleatGattChar_Blepp(BleatGatt_Blepp* owner, BLEPP::Characteristic& ble_char) : owner(owner), ble_char(ble_char) {
+WarbleGattChar_Blepp::WarbleGattChar_Blepp(WarbleGatt_Blepp* owner, BLEPP::Characteristic& ble_char) : owner(owner), ble_char(ble_char) {
     ble_char.cb_read = [this](const PDUReadResponse& r) {
         this->owner->active_char->gatt_op_error_handler = nullptr;
         this->owner->active_char = nullptr;
@@ -258,11 +258,11 @@ BleatGattChar_Blepp::BleatGattChar_Blepp(BleatGatt_Blepp* owner, BLEPP::Characte
     strcpy(uuid_str, str.c_str());
 }
 
-BleatGattChar_Blepp::~BleatGattChar_Blepp() {
+WarbleGattChar_Blepp::~WarbleGattChar_Blepp() {
 
 }
 
-void BleatGattChar_Blepp::write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+void WarbleGattChar_Blepp::write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
     try {
         gatt_op_error_handler = [this, context, handler](const char* msg) {
             owner->active_char = nullptr;
@@ -271,7 +271,7 @@ void BleatGattChar_Blepp::write_async(const uint8_t* value, uint8_t len, void* c
                 stringstream error_stream;
                 string full_msg;
 
-                error_stream << BLEAT_GATT_WRITE_ERROR << "(" << msg << ")";
+                error_stream << WARBLE_GATT_WRITE_ERROR << "(" << msg << ")";
                 full_msg = error_stream.str();
                 handler(context, this, full_msg.c_str());
             } else {
@@ -291,7 +291,7 @@ void BleatGattChar_Blepp::write_async(const uint8_t* value, uint8_t len, void* c
     }
 }
 
-void BleatGattChar_Blepp::write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+void WarbleGattChar_Blepp::write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
     stringstream error_stream;
     string msg;
     const char* error_msg = nullptr;
@@ -299,17 +299,17 @@ void BleatGattChar_Blepp::write_without_resp_async(const uint8_t* value, uint8_t
     try {
         ble_char.write_command(value, len);
     } catch (const std::exception& e) {
-        error_stream << BLEAT_GATT_WRITE_ERROR << "(" << e.what() << ")";
+        error_stream << WARBLE_GATT_WRITE_ERROR << "(" << e.what() << ")";
         msg = error_stream.str();
         error_msg = msg.c_str();
     } catch (const BLEDevice::WriteError&) {
-        error_msg = BLEAT_GATT_WRITE_ERROR;
+        error_msg = WARBLE_GATT_WRITE_ERROR;
     }
 
     handler(context, this, error_msg);
 }
 
-void BleatGattChar_Blepp::read_async(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP handler) {
+void WarbleGattChar_Blepp::read_async(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler) {
     try {
         gatt_op_error_handler = [this, context, handler](const char* msg) {
             owner->active_char = nullptr;
@@ -318,7 +318,7 @@ void BleatGattChar_Blepp::read_async(void* context, Void_VoidP_BleatGattCharP_Ub
                 stringstream error_stream;
                 string full_msg;
 
-                error_stream << BLEAT_GATT_READ_ERROR << "(" << msg << ")";
+                error_stream << WARBLE_GATT_READ_ERROR << "(" << msg << ")";
                 full_msg = error_stream.str();
                 handler(context, this, nullptr, 0, full_msg.c_str());
             } else {
@@ -338,7 +338,7 @@ void BleatGattChar_Blepp::read_async(void* context, Void_VoidP_BleatGattCharP_Ub
     }
 }
 
-void BleatGattChar_Blepp::enable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+void WarbleGattChar_Blepp::enable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
     try {
         gatt_op_error_handler = [this, context, handler](const char* msg) {
             owner->active_char = nullptr;
@@ -347,7 +347,7 @@ void BleatGattChar_Blepp::enable_notifications_async(void* context, Void_VoidP_B
                 stringstream error_stream;
                 string full_msg;
 
-                error_stream << BLEAT_GATT_ENABLE_NOTIFY_ERROR << "(" << msg << ")";
+                error_stream << WARBLE_GATT_ENABLE_NOTIFY_ERROR << "(" << msg << ")";
                 full_msg = error_stream.str();
                 handler(context, this, full_msg.c_str());
             } else {
@@ -364,7 +364,7 @@ void BleatGattChar_Blepp::enable_notifications_async(void* context, Void_VoidP_B
     }
 }
 
-void BleatGattChar_Blepp::disable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+void WarbleGattChar_Blepp::disable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
     try {
         gatt_op_error_handler = [this, context, handler](const char* msg) {
             owner->active_char = nullptr;
@@ -373,7 +373,7 @@ void BleatGattChar_Blepp::disable_notifications_async(void* context, Void_VoidP_
                 stringstream error_stream;
                 string full_msg;
 
-                error_stream << BLEAT_GATT_DISABLE_NOTIFY_ERROR << "(" << msg << ")";
+                error_stream << WARBLE_GATT_DISABLE_NOTIFY_ERROR << "(" << msg << ")";
                 full_msg = error_stream.str();
                 handler(context, this, full_msg.c_str());
             } else {
@@ -390,16 +390,16 @@ void BleatGattChar_Blepp::disable_notifications_async(void* context, Void_VoidP_
     }
 }
 
-void BleatGattChar_Blepp::on_notification_received(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler) {
+void WarbleGattChar_Blepp::on_notification_received(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte handler) {
     value_changed_context = context;
     value_changed_handler = handler;
 }
 
-const char* BleatGattChar_Blepp::get_uuid() const {
+const char* WarbleGattChar_Blepp::get_uuid() const {
     return uuid_str;
 }
 
-BleatGatt* BleatGattChar_Blepp::get_gatt() const {
+WarbleGatt* WarbleGattChar_Blepp::get_gatt() const {
     return owner;
 }
 

@@ -1,4 +1,4 @@
-#include "bleat/bleat.h"
+#include "warble/warble.h"
 
 #include <chrono>
 #include <functional>
@@ -38,7 +38,7 @@ static queue<vector<uint8_t>> values;
 static function<void(BleatGattChar*)> write_values_handler;
 static void write_values(BleatGattChar* gatt_char) {
     if (!values.empty()) {
-        bleat_gattchar_write_async(gatt_char, values.front().data(), values.front().size(), nullptr, [](void* context, BleatGattChar* caller, const char* value) {
+        warble_gattchar_write_async(gatt_char, values.front().data(), values.front().size(), nullptr, [](void* context, BleatGattChar* caller, const char* value) {
             values.pop();
             write_values(caller);
         });
@@ -53,20 +53,20 @@ int main(int argc, char** argv) {
 
     signal(SIGINT, signal_handler);
 
-    auto gatt = bleat_gatt_create(argv[1]);
-    bleat_gatt_connect_async(gatt, nullptr, [](void* context, BleatGatt* caller, const char* value) {
+    auto gatt = warble_gatt_create(argv[1]);
+    warble_gatt_connect_async(gatt, nullptr, [](void* context, BleatGatt* caller, const char* value) {
         if (value != nullptr) {
             cout << "Error connecting: " << value << endl;
         }
-        cout << "Connected? " << bleat_gatt_is_connected(caller) << endl;
+        cout << "Connected? " << warble_gatt_is_connected(caller) << endl;
 
         this_thread::sleep_for(5s);
         cv.notify_all();
     });
     cv.wait(lock);
 
-    bleat_gatt_disconnect(gatt);
+    warble_gatt_disconnect(gatt);
     
-    cout << "Donnected? " << bleat_gatt_is_connected(gatt) << endl;
+    cout << "Donnected? " << warble_gatt_is_connected(gatt) << endl;
     return 0;
 }

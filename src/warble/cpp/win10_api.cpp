@@ -30,24 +30,24 @@ using namespace Windows::Foundation;
 using namespace Windows::Security::Cryptography;
 using namespace Platform;
 
-struct BleatGattChar_Win10 : public BleatGattChar {
-    BleatGattChar_Win10(BleatGatt* owner, GattCharacteristic^ characteristic);
+struct WarbleGattChar_Win10 : public WarbleGattChar {
+    WarbleGattChar_Win10(WarbleGatt* owner, GattCharacteristic^ characteristic);
 
-    virtual ~BleatGattChar_Win10();
+    virtual ~WarbleGattChar_Win10();
 
-    virtual void write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
-    virtual void write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler);
+    virtual void write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
+    virtual void write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
 
-    virtual void read_async(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP handler);
+    virtual void read_async(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler);
 
-    virtual void enable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
-    virtual void disable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler);
-    virtual void on_notification_received(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler);
+    virtual void enable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler);
+    virtual void disable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler);
+    virtual void on_notification_received(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte handler);
 
     virtual const char* get_uuid() const;
-    virtual BleatGatt* get_gatt() const;
+    virtual WarbleGatt* get_gatt() const;
 private:
-    inline void write_inner_async(GattWriteOption option, const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+    inline void write_inner_async(GattWriteOption option, const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
         Array<byte>^ wrapper = ref new Array<byte>(len);
         for (uint8_t i = 0; i < len; i++) {
             wrapper[i] = value[i];
@@ -56,14 +56,14 @@ private:
         create_task(characteristic->WriteValueAsync(CryptographicBuffer::CreateFromByteArray(wrapper), option))
             .then([context, handler, this](GattCommunicationStatus status) {
             if (status != GattCommunicationStatus::Success) {
-                handler(context, this, BLEAT_GATT_WRITE_ERROR);
+                handler(context, this, WARBLE_GATT_WRITE_ERROR);
             } else {
                 handler(context, this, nullptr);
             }
         });
     }
 
-    BleatGatt* owner;
+    WarbleGatt* owner;
     GattCharacteristic^ characteristic;
     Windows::Foundation::EventRegistrationToken cookie;
     string uuid_str;
@@ -80,16 +80,16 @@ struct EqualFn {
     }
 };
 
-struct BleatGatt_Win10 : public BleatGatt {
-    BleatGatt_Win10(const char* mac, BluetoothAddressType addr_type);
-    virtual ~BleatGatt_Win10();
+struct WarbleGatt_Win10 : public WarbleGatt {
+    WarbleGatt_Win10(const char* mac, BluetoothAddressType addr_type);
+    virtual ~WarbleGatt_Win10();
 
-    virtual void connect_async(void* context, Void_VoidP_BleatGattP_CharP handler);
+    virtual void connect_async(void* context, Void_VoidP_WarbleGattP_CharP handler);
     virtual void disconnect();
-    virtual void on_disconnect(void* context, Void_VoidP_BleatGattP_Int handler);
+    virtual void on_disconnect(void* context, Void_VoidP_WarbleGattP_Int handler);
     virtual bool is_connected() const;
 
-    virtual BleatGattChar* find_characteristic(const string& uuid) const;
+    virtual WarbleGattChar* find_characteristic(const string& uuid) const;
     virtual bool service_exists(const string& uuid) const;
 
 private:
@@ -98,16 +98,16 @@ private:
     string mac;
 
     void *on_disconnect_context;
-    Void_VoidP_BleatGattP_Int on_disconnect_handler;
+    Void_VoidP_WarbleGattP_Int on_disconnect_handler;
 
     BluetoothLEDevice^ device;
     BluetoothAddressType addr_type;
     Windows::Foundation::EventRegistrationToken cookie;
-    unordered_map<Guid, BleatGattChar_Win10*, Hasher, EqualFn> characteristics;
+    unordered_map<Guid, WarbleGattChar_Win10*, Hasher, EqualFn> characteristics;
     unordered_set<Guid, Hasher, EqualFn> services;
 };
 
-BleatGatt* bleatgatt_create(int32_t nopts, const BleatOption* opts) {
+WarbleGatt* warblegatt_create(int32_t nopts, const WarbleOption* opts) {
     const char* mac = nullptr;
     BluetoothAddressType addr_type = BluetoothAddressType::Random;
     unordered_map<string, function<void(const char*)>> arg_processors = {
@@ -134,17 +134,17 @@ BleatGatt* bleatgatt_create(int32_t nopts, const BleatOption* opts) {
         throw runtime_error("required option 'mac' was not set");
     }
 
-    return new BleatGatt_Win10(mac, addr_type);
+    return new WarbleGatt_Win10(mac, addr_type);
 }
 
-BleatGatt_Win10::BleatGatt_Win10(const char* mac, BluetoothAddressType addr_type) : mac(mac), device(nullptr), on_disconnect_context(nullptr), on_disconnect_handler(nullptr), addr_type(addr_type) {
+WarbleGatt_Win10::WarbleGatt_Win10(const char* mac, BluetoothAddressType addr_type) : mac(mac), device(nullptr), on_disconnect_context(nullptr), on_disconnect_handler(nullptr), addr_type(addr_type) {
 }
 
-BleatGatt_Win10::~BleatGatt_Win10() {
+WarbleGatt_Win10::~WarbleGatt_Win10() {
     cleanup();
 }
 
-void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_CharP handler) {
+void WarbleGatt_Win10::connect_async(void* context, Void_VoidP_WarbleGattP_CharP handler) {
     task_completion_event<void> discover_device_event;
     task<void> event_set(discover_device_event);
 
@@ -198,7 +198,7 @@ void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
         for (auto it : results) {
             if (it->Status == GattCommunicationStatus::Success) {
                 for (auto it2 : it->Characteristics) {
-                    characteristics.emplace(it2->Uuid, new BleatGattChar_Win10(this, it2));
+                    characteristics.emplace(it2->Uuid, new WarbleGattChar_Win10(this, it2));
                 }
             } else {
                 throw runtime_error("Failed to discover gatt characteristics");
@@ -214,7 +214,7 @@ void BleatGatt_Win10::connect_async(void* context, Void_VoidP_BleatGattP_CharP h
     });
 }
 
-void BleatGatt_Win10::disconnect() {
+void WarbleGatt_Win10::disconnect() {
     cleanup();
 
     if (on_disconnect_handler != nullptr) {
@@ -222,7 +222,7 @@ void BleatGatt_Win10::disconnect() {
     }
 }
 
-void BleatGatt_Win10::cleanup() {
+void WarbleGatt_Win10::cleanup() {
     for (auto it : characteristics) {
         delete it.second;
     }
@@ -235,12 +235,12 @@ void BleatGatt_Win10::cleanup() {
     }
 }
 
-void BleatGatt_Win10::on_disconnect(void* context, Void_VoidP_BleatGattP_Int handler) {
+void WarbleGatt_Win10::on_disconnect(void* context, Void_VoidP_WarbleGattP_Int handler) {
     on_disconnect_context = context;
     on_disconnect_handler = handler;
 }
 
-bool BleatGatt_Win10::is_connected() const {
+bool WarbleGatt_Win10::is_connected() const {
     return device != nullptr && device->ConnectionStatus == BluetoothConnectionStatus::Connected;
 }
 
@@ -253,7 +253,7 @@ bool BleatGatt_Win10::is_connected() const {
     GUID rawguid;\
     HRESULT hr = IIDFromString(casted->Data(), &rawguid);
 
-BleatGattChar* BleatGatt_Win10::find_characteristic(const string& uuid) const {
+WarbleGattChar* WarbleGatt_Win10::find_characteristic(const string& uuid) const {
     UUID_TO_GUID(uuid);
 
     if (SUCCEEDED(hr)) {
@@ -263,7 +263,7 @@ BleatGattChar* BleatGatt_Win10::find_characteristic(const string& uuid) const {
     return nullptr;
 }
 
-bool BleatGatt_Win10::service_exists(const string& uuid) const {
+bool WarbleGatt_Win10::service_exists(const string& uuid) const {
     UUID_TO_GUID(uuid);    
 
     if (SUCCEEDED(hr)) {
@@ -272,60 +272,60 @@ bool BleatGatt_Win10::service_exists(const string& uuid) const {
     return 0;
 }
 
-BleatGattChar_Win10::BleatGattChar_Win10(BleatGatt* owner, GattCharacteristic^ characteristic) : owner(owner), characteristic(characteristic) {
+WarbleGattChar_Win10::WarbleGattChar_Win10(WarbleGatt* owner, GattCharacteristic^ characteristic) : owner(owner), characteristic(characteristic) {
     wstring wide(characteristic->Uuid.ToString()->Data());
     uuid_str = string(wide.begin(), wide.end()).substr(1, 36);
 }
 
-BleatGattChar_Win10::~BleatGattChar_Win10() {
+WarbleGattChar_Win10::~WarbleGattChar_Win10() {
     characteristic->ValueChanged -= cookie;
     characteristic = nullptr;
 }
 
-void BleatGattChar_Win10::write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+void WarbleGattChar_Win10::write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
     write_inner_async(GattWriteOption::WriteWithResponse, value, len, context, handler);
 }
 
-void BleatGattChar_Win10::write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+void WarbleGattChar_Win10::write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
     write_inner_async(GattWriteOption::WriteWithoutResponse, value, len, context, handler);
 }
 
-void BleatGattChar_Win10::read_async(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte_CharP handler) {
+void WarbleGattChar_Win10::read_async(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler) {
     create_task(characteristic->ReadValueAsync()).then([context, handler, this](GattReadResult^ result) {
         if (result->Status == GattCommunicationStatus::Success) {
             Array<byte>^ wrapper = ref new Array<byte>(result->Value->Length);
             CryptographicBuffer::CopyToByteArray(result->Value, &wrapper);
             handler(context, this, (uint8_t*)wrapper->Data, wrapper->Length, nullptr);
         } else {
-            handler(context, this, nullptr, 0, BLEAT_GATT_READ_ERROR);
+            handler(context, this, nullptr, 0, WARBLE_GATT_READ_ERROR);
         }
     });
 }
 
-void BleatGattChar_Win10::enable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+void WarbleGattChar_Win10::enable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
     create_task(characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue::Notify))
         .then([context, handler, this](GattCommunicationStatus status) {
             if (status == GattCommunicationStatus::Success) {
                 handler(context, this, nullptr);
             } else {
-                handler(context, this, BLEAT_GATT_ENABLE_NOTIFY_ERROR);
+                handler(context, this, WARBLE_GATT_ENABLE_NOTIFY_ERROR);
             }
         });
 }
 
-void BleatGattChar_Win10::disable_notifications_async(void* context, Void_VoidP_BleatGattCharP_CharP handler) {
+void WarbleGattChar_Win10::disable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
     create_task(characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue::None))
         .then([context, handler, this](GattCommunicationStatus status) {
             if (status == GattCommunicationStatus::Success) {
                 characteristic->ValueChanged -= cookie;
                 handler(context, this, nullptr);
             } else {
-                handler(context, this, BLEAT_GATT_DISABLE_NOTIFY_ERROR);
+                handler(context, this, WARBLE_GATT_DISABLE_NOTIFY_ERROR);
             }
         });
 }
 
-void BleatGattChar_Win10::on_notification_received(void* context, Void_VoidP_BleatGattCharP_UbyteP_Ubyte handler) {
+void WarbleGattChar_Win10::on_notification_received(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte handler) {
     cookie = characteristic->ValueChanged += ref new TypedEventHandler<GattCharacteristic^, GattValueChangedEventArgs^>([context, handler, this](GattCharacteristic^ sender, GattValueChangedEventArgs^ obj) {
         Array<byte>^ wrapper = ref new Array<byte>(obj->CharacteristicValue->Length);
         CryptographicBuffer::CopyToByteArray(obj->CharacteristicValue, &wrapper);
@@ -333,11 +333,11 @@ void BleatGattChar_Win10::on_notification_received(void* context, Void_VoidP_Ble
     });
 }
 
-const char* BleatGattChar_Win10::get_uuid() const {
+const char* WarbleGattChar_Win10::get_uuid() const {
     return uuid_str.c_str();
 }
 
-BleatGatt* BleatGattChar_Win10::get_gatt() const {
+WarbleGatt* WarbleGattChar_Win10::get_gatt() const {
     return owner;
 }
 

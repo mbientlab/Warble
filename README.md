@@ -1,4 +1,4 @@
-# bleat
+# warble
 Bleat, besides being the cry of a sheep or goat, provides a common C api for using Bluetooth LE features on Linux and Windows 10.  
 
 # Build
@@ -6,7 +6,7 @@ As this library is designed to work across two platforms, there will be differen
 target platform.
 
 ## Linux
-On Linux, bleat wraps around the [libblepp](https://github.com/edrosten/libblepp) library, which is included as a submodule.  You 
+On Linux, warble wraps around the [libblepp](https://github.com/edrosten/libblepp) library, which is included as a submodule.  You 
 will need to have BlueZ, Boost headers, and GNU Make installed along with a C++ compiler that support C++14.  
 
 ```bash
@@ -20,9 +20,9 @@ MSBuild.
 
 ```bat
 cd vs2017
-MSBuild.exe bleat.sln
+MSBuild.exe warble.sln
 ```
 
 # Examples
-Example scripts showcasing how to use the library are in the [example](https://github.com/mbientlab/bleat/blob/master/example) 
+Example scripts showcasing how to use the library are in the [example](https://github.com/mbientlab/warble/blob/master/example) 
 folder.  

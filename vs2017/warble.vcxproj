@@ -19,38 +19,38 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="GenFiles">
-    <LibDef>..\src\bleat\cpp\lib_def.h</LibDef>
+    <LibDef>..\src\warble\cpp\lib_def.h</LibDef>
   </PropertyGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\bleat\bleat.h" />
-    <ClInclude Include="..\src\bleat\cpp\error_messages.h" />
-    <ClInclude Include="..\src\bleat\cpp\gattchar_def.h" />
-    <ClInclude Include="..\src\bleat\cpp\gatt_def.h" />
-    <ClInclude Include="..\src\bleat\cpp\scanner_def.h" />
-    <ClInclude Include="..\src\bleat\dllmarker.h" />
-    <ClInclude Include="..\src\bleat\gatt.h" />
-    <ClInclude Include="..\src\bleat\gattchar.h" />
-    <ClInclude Include="..\src\bleat\gattchar_fwd.h" />
-    <ClInclude Include="..\src\bleat\gatt_fwd.h" />
-    <ClInclude Include="..\src\bleat\lib.h" />
+    <ClInclude Include="..\src\warble\warble.h" />
+    <ClInclude Include="..\src\warble\cpp\error_messages.h" />
+    <ClInclude Include="..\src\warble\cpp\gattchar_def.h" />
+    <ClInclude Include="..\src\warble\cpp\gatt_def.h" />
+    <ClInclude Include="..\src\warble\cpp\scanner_def.h" />
+    <ClInclude Include="..\src\warble\dllmarker.h" />
+    <ClInclude Include="..\src\warble\gatt.h" />
+    <ClInclude Include="..\src\warble\gattchar.h" />
+    <ClInclude Include="..\src\warble\gattchar_fwd.h" />
+    <ClInclude Include="..\src\warble\gatt_fwd.h" />
+    <ClInclude Include="..\src\warble\lib.h" />
     <ClInclude Include="$(LibDef)" />
-    <ClInclude Include="..\src\bleat\scanner.h" />
-    <ClInclude Include="..\src\bleat\scan_result.h" />
-    <ClInclude Include="..\src\bleat\types.h" />
+    <ClInclude Include="..\src\warble\scanner.h" />
+    <ClInclude Include="..\src\warble\scan_result.h" />
+    <ClInclude Include="..\src\warble\types.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\bleat\cpp\gatt.cpp" />
-    <ClCompile Include="..\src\bleat\cpp\gattchar.cpp" />
-    <ClCompile Include="..\src\bleat\cpp\lib.cpp" />
-    <ClCompile Include="..\src\bleat\cpp\scanner.cpp" />
-    <ClCompile Include="..\src\bleat\cpp\win10_api.cpp" />
-    <ClCompile Include="..\src\bleat\cpp\win10_scanner.cpp" />
+    <ClCompile Include="..\src\warble\cpp\gatt.cpp" />
+    <ClCompile Include="..\src\warble\cpp\gattchar.cpp" />
+    <ClCompile Include="..\src\warble\cpp\lib.cpp" />
+    <ClCompile Include="..\src\warble\cpp\scanner.cpp" />
+    <ClCompile Include="..\src\warble\cpp\win10_api.cpp" />
+    <ClCompile Include="..\src\warble\cpp\win10_scanner.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{DA949DC1-1ED3-45CA-8DCA-128281E5C63B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>bleat</RootNamespace>
+    <RootNamespace>warble</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -120,7 +120,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>BLEAT_DLL_EXPORTS;API_WIN10;WIN32;_DEBUG;BLEAT_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WARBLE_DLL_EXPORTS;API_WIN10;WIN32;_DEBUG;WARBLE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAsWinRT>true</CompileAsWinRT>
       <AdditionalUsingDirectories>$(MSBuildProgramFiles32)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\vcpackages;$(MSBuildProgramFiles32)\Windows Kits\10\UnionMetadata\10.0.16299.0;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
@@ -137,7 +137,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>BLEAT_DLL_EXPORTS;API_WIN10;_DEBUG;BLEAT_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WARBLE_DLL_EXPORTS;API_WIN10;_DEBUG;WARBLE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAsWinRT>true</CompileAsWinRT>
       <AdditionalUsingDirectories>$(MSBuildProgramFiles32)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\vcpackages;$(MSBuildProgramFiles32)\Windows Kits\10\UnionMetadata\10.0.16299.0;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
@@ -156,7 +156,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>BLEAT_DLL_EXPORTS;API_WIN10;WIN32;NDEBUG;BLEAT_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WARBLE_DLL_EXPORTS;API_WIN10;WIN32;NDEBUG;WARBLE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAsWinRT>true</CompileAsWinRT>
       <AdditionalUsingDirectories>$(MSBuildProgramFiles32)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\vcpackages;$(MSBuildProgramFiles32)\Windows Kits\10\UnionMetadata\10.0.16299.0;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
@@ -177,7 +177,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>BLEAT_DLL_EXPORTS;API_WIN10;NDEBUG;BLEAT_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WARBLE_DLL_EXPORTS;API_WIN10;NDEBUG;WARBLE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAsWinRT>true</CompileAsWinRT>
       <AdditionalUsingDirectories>$(MSBuildProgramFiles32)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\vcpackages;$(MSBuildProgramFiles32)\Windows Kits\10\UnionMetadata\10.0.16299.0;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
@@ -198,7 +198,7 @@
       <Output TaskParameter="ConsoleOutput" PropertyName="ProjectVersion" />
     </Exec>
     <WriteLinesToFile File="$(LibDef)" Lines="#pragma once" Overwrite="true" Encoding="Unicode" />
-    <WriteLinesToFile File="$(LibDef)" Lines="#define BLEAT_LIB_VERSION &quot;$(ProjectVersion)&quot;" Overwrite="false" Encoding="Unicode" />
-    <WriteLinesToFile File="$(LibDef)" Lines="#define BLEAT_LIB_CONFIG &quot;$(Configuration)&quot;" Overwrite="false" Encoding="Unicode" />
+    <WriteLinesToFile File="$(LibDef)" Lines="#define WARBLE_LIB_VERSION &quot;$(ProjectVersion)&quot;" Overwrite="false" Encoding="Unicode" />
+    <WriteLinesToFile File="$(LibDef)" Lines="#define WARBLE_LIB_CONFIG &quot;$(Configuration)&quot;" Overwrite="false" Encoding="Unicode" />
   </Target>
 </Project>

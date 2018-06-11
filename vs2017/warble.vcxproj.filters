@@ -15,70 +15,70 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\bleat\bleat.h">
+    <ClInclude Include="..\src\warble\warble.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\dllmarker.h">
+    <ClInclude Include="..\src\warble\dllmarker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\gatt.h">
+    <ClInclude Include="..\src\warble\gatt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\gatt_fwd.h">
+    <ClInclude Include="..\src\warble\gatt_fwd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\gattchar.h">
+    <ClInclude Include="..\src\warble\gattchar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\gattchar_fwd.h">
+    <ClInclude Include="..\src\warble\gattchar_fwd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\lib.h">
+    <ClInclude Include="..\src\warble\lib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\scan_result.h">
+    <ClInclude Include="..\src\warble\scan_result.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\scanner.h">
+    <ClInclude Include="..\src\warble\scanner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\types.h">
+    <ClInclude Include="..\src\warble\types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\cpp\gatt_def.h">
+    <ClInclude Include="..\src\warble\cpp\gatt_def.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\cpp\gattchar_def.h">
+    <ClInclude Include="..\src\warble\cpp\gattchar_def.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\cpp\scanner_def.h">
+    <ClInclude Include="..\src\warble\cpp\scanner_def.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="$(LibDef)">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\bleat\cpp\error_messages.h">
+    <ClInclude Include="..\src\warble\cpp\error_messages.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="$(LibDef)" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\bleat\cpp\gatt.cpp">
+    <ClCompile Include="..\src\warble\cpp\gatt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\bleat\cpp\gattchar.cpp">
+    <ClCompile Include="..\src\warble\cpp\gattchar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\bleat\cpp\lib.cpp">
+    <ClCompile Include="..\src\warble\cpp\lib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\bleat\cpp\scanner.cpp">
+    <ClCompile Include="..\src\warble\cpp\scanner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\bleat\cpp\win10_api.cpp">
+    <ClCompile Include="..\src\warble\cpp\win10_api.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\bleat\cpp\win10_scanner.cpp">
+    <ClCompile Include="..\src\warble\cpp\win10_scanner.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
