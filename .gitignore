@@ -1,6 +1,6 @@
 /build/
 /dist/
-src/bleat/cpp/lib_def.h
+src/warble/cpp/lib_def.h
 version.mk
 
 # User-specific files

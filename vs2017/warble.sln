@@ -9,7 +9,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "example-scanner", "example-
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "example-connect", "example-connect\example-connect.vcxproj", "{6DDCF313-2B32-4CCF-809F-C5FB9487181A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "eample-read-dev-info", "eample-read-dev-info\eample-read-dev-info.vcxproj", "{18088F5A-274D-4ED2-86BB-3AE758637423}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "example-read-dev-info", "example-read-dev-info\example-read-dev-info.vcxproj", "{18088F5A-274D-4ED2-86BB-3AE758637423}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
