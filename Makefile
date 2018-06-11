@@ -10,7 +10,7 @@ endif
 include config.mk
 include $(VERSION_MK)
 
-CXXFLAGS:=-std=c++14 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -DBLEAT_DLL -DBLEAT_DLL_EXPORT -Isrc 
+CXXFLAGS:=-std=c++14 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -DWARBLE_DLL -DWARBLE_DLL_EXPORT -Isrc 
 
 DEPS_BLEPP:=deps/libblepp/libble++.so
 
