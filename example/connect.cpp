@@ -35,10 +35,10 @@ static void bytes_to_hex_string(ostream& os, uint8_t length, const uint8_t* valu
 
 static uint32_t samples = 0;
 static queue<vector<uint8_t>> values;
-static function<void(BleatGattChar*)> write_values_handler;
-static void write_values(BleatGattChar* gatt_char) {
+static function<void(WarbleGattChar*)> write_values_handler;
+static void write_values(WarbleGattChar* gatt_char) {
     if (!values.empty()) {
-        warble_gattchar_write_async(gatt_char, values.front().data(), values.front().size(), nullptr, [](void* context, BleatGattChar* caller, const char* value) {
+        warble_gattchar_write_async(gatt_char, values.front().data(), values.front().size(), nullptr, [](void* context, WarbleGattChar* caller, const char* value) {
             values.pop();
             write_values(caller);
         });
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     signal(SIGINT, signal_handler);
 
     auto gatt = warble_gatt_create(argv[1]);
-    warble_gatt_connect_async(gatt, nullptr, [](void* context, BleatGatt* caller, const char* value) {
+    warble_gatt_connect_async(gatt, nullptr, [](void* context, WarbleGatt* caller, const char* value) {
         if (value != nullptr) {
             cout << "Error connecting: " << value << endl;
         }

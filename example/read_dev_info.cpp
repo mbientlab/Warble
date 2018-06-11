@@ -12,7 +12,7 @@ using namespace std;
 
 static function<void(void)> read_completed;
 static queue<const char*> uuids;
-static void read_char_values(BleatGatt* gatt) {
+static void read_char_values(WarbleGatt* gatt) {
     if (!uuids.size()) {
         read_completed();
         return;
@@ -24,7 +24,7 @@ static void read_char_values(BleatGatt* gatt) {
     if (gatt_char == nullptr) {
         cout << next << ": not found " << endl;
     } else {
-        warble_gattchar_read_async(gatt_char, nullptr, [](void* context, BleatGattChar* caller, const uint8_t* value, uint8_t length, const char* error) {
+        warble_gattchar_read_async(gatt_char, nullptr, [](void* context, WarbleGattChar* caller, const uint8_t* value, uint8_t length, const char* error) {
             cout << warble_gattchar_get_uuid(caller);
             
             if (error != nullptr) {
@@ -33,7 +33,7 @@ static void read_char_values(BleatGatt* gatt) {
                 cout << ": " << string(value, value + length) << endl;
             }
 
-            BleatGatt* gatt = (BleatGatt*) context;
+            WarbleGatt* gatt = (WarbleGatt*) context;
             uuids.pop();
 
             read_char_values(warble_gattchar_get_gatt(caller));
@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 
     auto gatt = warble_gatt_create(argv[1]);
 
-    warble_gatt_connect_async(gatt, nullptr, [](void* context, BleatGatt* caller, const char* error) {
+    warble_gatt_connect_async(gatt, nullptr, [](void* context, WarbleGatt* caller, const char* error) {
         uuids.push("00002a26-0000-1000-8000-00805f9b34fb");
         uuids.push("00002a24-0000-1000-8000-00805f9b34fb");
         uuids.push("00002a27-0000-1000-8000-00805f9b34fb");
