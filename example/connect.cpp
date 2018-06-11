@@ -1,3 +1,4 @@
+// compile: g++ -o connect example/connect.cpp -std=c++14 -Isrc -Ldist/release/lib/x64 -Ldeps/libblepp -lwarble -lpthread -lble++
 #include "warble/warble.h"
 
 #include <chrono>
@@ -19,41 +20,29 @@ using namespace std::chrono_literals;
 
 static condition_variable cv;
 
-static void signal_handler(int signum) {
-    if (signum == SIGABRT) {
-        cv.notify_all();
-    }
-}
-
-static void bytes_to_hex_string(ostream& os, uint8_t length, const uint8_t* value) {
-    os << "[" << hex << setw(2) << setfill('0');
-    for (uint8_t i = 0; i < length; i++) {
-        os << (i == 0 ? "0x" : ", 0x") << (int)value[i];
-    }
-    os << "]" << dec;
-}
-
-static uint32_t samples = 0;
-static queue<vector<uint8_t>> values;
-static function<void(WarbleGattChar*)> write_values_handler;
-static void write_values(WarbleGattChar* gatt_char) {
-    if (!values.empty()) {
-        warble_gattchar_write_async(gatt_char, values.front().data(), values.front().size(), nullptr, [](void* context, WarbleGattChar* caller, const char* value) {
-            values.pop();
-            write_values(caller);
-        });
-    } else {
-        write_values_handler(gatt_char);
-    }
-}
-
 int main(int argc, char** argv) {
+    if (argc < 2) {
+        cerr << "usage: connect [device mac] [hci mac](optional)" << endl;
+        return 1;
+    }
+
     mutex m;
     unique_lock<std::mutex> lock(m);
 
-    signal(SIGINT, signal_handler);
-
+#ifdef WIN32
     auto gatt = warble_gatt_create(argv[1]);
+#else
+    // Setting hci mac only supported on Linux
+    WarbleOption config_options[2] = {
+        {"mac", argv[1]}
+    };
+    if (argc >= 3) {
+        config_options[1].key = "hci";
+        config_options[1].value = argv[2];
+    }
+
+    auto gatt = warble_gatt_create_with_options(argc - 1, config_options);
+#endif
     warble_gatt_connect_async(gatt, nullptr, [](void* context, WarbleGatt* caller, const char* value) {
         if (value != nullptr) {
             cout << "Error connecting: " << value << endl;
