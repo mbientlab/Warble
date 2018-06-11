@@ -24,7 +24,7 @@ public:
     WarbleScanner_Blepp();
     virtual ~WarbleScanner_Blepp();
 
-    virtual void set_handler(void* context, Void_VoidP_WarbleScanResultP handler);
+    virtual void set_handler(void* context, FnVoid_VoidP_WarbleScanResultP handler);
     virtual void start(WARBLE_INT nopts, const WarbleOption* opts);
     virtual void stop();
 
@@ -34,7 +34,7 @@ private:
     unordered_map<string, string> device_names;
 
     void* scan_result_context;
-    Void_VoidP_WarbleScanResultP scan_result_handler;
+    FnVoid_VoidP_WarbleScanResultP scan_result_handler;
     std::thread scan_thread;
     bool terminate_scan;
 };
@@ -50,7 +50,7 @@ WarbleScanner_Blepp::~WarbleScanner_Blepp() {
     stop();
 }
 
-void WarbleScanner_Blepp::set_handler(void* context, Void_VoidP_WarbleScanResultP handler) {
+void WarbleScanner_Blepp::set_handler(void* context, FnVoid_VoidP_WarbleScanResultP handler) {
     scan_result_context = context;
     scan_result_handler = handler;
 }

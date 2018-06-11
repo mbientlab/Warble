@@ -28,9 +28,9 @@ struct WarbleGatt_Blepp : public WarbleGatt {
     WarbleGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr);
     virtual ~WarbleGatt_Blepp();
 
-    virtual void connect_async(void* context, Void_VoidP_WarbleGattP_CharP handler);
+    virtual void connect_async(void* context, FnVoid_VoidP_WarbleGattP_CharP handler);
     virtual void disconnect();
-    virtual void on_disconnect(void* context, Void_VoidP_WarbleGattP_Int handler);
+    virtual void on_disconnect(void* context, FnVoid_VoidP_WarbleGattP_Int handler);
     virtual bool is_connected() const;
 
     virtual WarbleGattChar* find_characteristic(const std::string& uuid) const;
@@ -44,11 +44,11 @@ private:
     string mac, hci_mac;
 
     void *on_disconnect_context;
-    Void_VoidP_WarbleGattP_Int on_disconnect_handler;
+    FnVoid_VoidP_WarbleGattP_Int on_disconnect_handler;
 
     WarbleGattChar_Blepp* active_char;
     void* write_context;
-    Void_VoidP_WarbleGattCharP_CharP write_handler;
+    FnVoid_VoidP_WarbleGattCharP_CharP write_handler;
 
     BLEGATTStateMachine gatt;
     unordered_map<string, WarbleGattChar_Blepp*> characteristics;
@@ -63,14 +63,14 @@ struct WarbleGattChar_Blepp : public WarbleGattChar {
 
     virtual ~WarbleGattChar_Blepp();
 
-    virtual void write_async(const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
-    virtual void write_without_resp_async(const std::uint8_t* value, std::uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
+    virtual void write_async(const std::uint8_t* value, std::uint8_t len, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler);
+    virtual void write_without_resp_async(const std::uint8_t* value, std::uint8_t len, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler);
 
-    virtual void read_async(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler);
+    virtual void read_async(void* context, FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler);
 
-    virtual void enable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler);
-    virtual void disable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler);
-    virtual void on_notification_received(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte handler);
+    virtual void enable_notifications_async(void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler);
+    virtual void disable_notifications_async(void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler);
+    virtual void on_notification_received(void* context, FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte handler);
 
     virtual const char* get_uuid() const;
     virtual WarbleGatt* get_gatt() const;
@@ -82,8 +82,8 @@ private:
     char uuid_str[37];
 
     void *read_context, *value_changed_context;
-    Void_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP read_handler;
-    Void_VoidP_WarbleGattCharP_UbyteP_Ubyte value_changed_handler;
+    FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP read_handler;
+    FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte value_changed_handler;
 
     function<void(const char*)> gatt_op_error_handler;
 };
@@ -149,7 +149,7 @@ void WarbleGatt_Blepp::clear_characteristics() {
     characteristics.clear();
 }
 
-void WarbleGatt_Blepp::connect_async(void* context, Void_VoidP_WarbleGattP_CharP handler) {
+void WarbleGatt_Blepp::connect_async(void* context, FnVoid_VoidP_WarbleGattP_CharP handler) {
     thread th([this, context, handler]() {
         bool terminate = false;
         int dc_code;
@@ -226,7 +226,7 @@ void WarbleGatt_Blepp::disconnect() {
     gatt.close();
 }
 
-void WarbleGatt_Blepp::on_disconnect(void* context, Void_VoidP_WarbleGattP_Int handler) {
+void WarbleGatt_Blepp::on_disconnect(void* context, FnVoid_VoidP_WarbleGattP_Int handler) {
     on_disconnect_context = context;
     on_disconnect_handler = handler;
 }
@@ -262,7 +262,7 @@ WarbleGattChar_Blepp::~WarbleGattChar_Blepp() {
 
 }
 
-void WarbleGattChar_Blepp::write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
+void WarbleGattChar_Blepp::write_async(const uint8_t* value, uint8_t len, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler) {
     try {
         gatt_op_error_handler = [this, context, handler](const char* msg) {
             owner->active_char = nullptr;
@@ -291,7 +291,7 @@ void WarbleGattChar_Blepp::write_async(const uint8_t* value, uint8_t len, void* 
     }
 }
 
-void WarbleGattChar_Blepp::write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
+void WarbleGattChar_Blepp::write_without_resp_async(const uint8_t* value, uint8_t len, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler) {
     stringstream error_stream;
     string msg;
     const char* error_msg = nullptr;
@@ -309,7 +309,7 @@ void WarbleGattChar_Blepp::write_without_resp_async(const uint8_t* value, uint8_
     handler(context, this, error_msg);
 }
 
-void WarbleGattChar_Blepp::read_async(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler) {
+void WarbleGattChar_Blepp::read_async(void* context, FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler) {
     try {
         gatt_op_error_handler = [this, context, handler](const char* msg) {
             owner->active_char = nullptr;
@@ -338,7 +338,7 @@ void WarbleGattChar_Blepp::read_async(void* context, Void_VoidP_WarbleGattCharP_
     }
 }
 
-void WarbleGattChar_Blepp::enable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
+void WarbleGattChar_Blepp::enable_notifications_async(void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler) {
     try {
         gatt_op_error_handler = [this, context, handler](const char* msg) {
             owner->active_char = nullptr;
@@ -364,7 +364,7 @@ void WarbleGattChar_Blepp::enable_notifications_async(void* context, Void_VoidP_
     }
 }
 
-void WarbleGattChar_Blepp::disable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
+void WarbleGattChar_Blepp::disable_notifications_async(void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler) {
     try {
         gatt_op_error_handler = [this, context, handler](const char* msg) {
             owner->active_char = nullptr;
@@ -390,7 +390,7 @@ void WarbleGattChar_Blepp::disable_notifications_async(void* context, Void_VoidP
     }
 }
 
-void WarbleGattChar_Blepp::on_notification_received(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte handler) {
+void WarbleGattChar_Blepp::on_notification_received(void* context, FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte handler) {
     value_changed_context = context;
     value_changed_handler = handler;
 }
