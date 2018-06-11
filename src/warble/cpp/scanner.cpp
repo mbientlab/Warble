@@ -19,7 +19,7 @@ WarbleScanner::~WarbleScanner() {
 
 }
 
-void warble_scanner_set_handler(void* context, Void_VoidP_WarbleScanResultP handler) {
+void warble_scanner_set_handler(void* context, FnVoid_VoidP_WarbleScanResultP handler) {
     get_scanner()->set_handler(context, handler);
 }
 

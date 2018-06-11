@@ -21,13 +21,13 @@ public:
     WarbleScanner_Win10();
     virtual ~WarbleScanner_Win10();
 
-    virtual void set_handler(void* context, Void_VoidP_WarbleScanResultP handler);
+    virtual void set_handler(void* context, FnVoid_VoidP_WarbleScanResultP handler);
     virtual void start(int32_t nopts, const WarbleOption* opts);
     virtual void stop();
 
 private:
     void* scan_result_context;
-    Void_VoidP_WarbleScanResultP scan_result_handler;
+    FnVoid_VoidP_WarbleScanResultP scan_result_handler;
 
     unordered_map<uint64_t, WarbleScanPrivateData> seen_devices;
     BluetoothLEAdvertisementWatcher^ watcher;
@@ -96,7 +96,7 @@ WarbleScanner_Win10::~WarbleScanner_Win10() {
     watcher = nullptr;
 }
 
-void WarbleScanner_Win10::set_handler(void* context, Void_VoidP_WarbleScanResultP handler) {
+void WarbleScanner_Win10::set_handler(void* context, FnVoid_VoidP_WarbleScanResultP handler) {
     scan_result_context = context;
     scan_result_handler = handler;
 }

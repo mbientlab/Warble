@@ -37,7 +37,7 @@ WARBLE_API void warble_gatt_delete(WarbleGatt* obj);
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when the connect task is completed
  */
-WARBLE_API void warble_gatt_connect_async(WarbleGatt* obj, void* context, Void_VoidP_WarbleGattP_CharP handler);
+WARBLE_API void warble_gatt_connect_async(WarbleGatt* obj, void* context, FnVoid_VoidP_WarbleGattP_CharP handler);
 /**
  * Disconnects from the remot device.  The callback function set in <code>warble_gatt_on_disconnect</code> will be called 
  * after all resources are freed
@@ -50,7 +50,7 @@ WARBLE_API void warble_gatt_disconnect(WarbleGatt* obj);
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when a disconnect event is received
  */
-WARBLE_API void warble_gatt_on_disconnect(WarbleGatt* obj, void* context, Void_VoidP_WarbleGattP_Int handler);
+WARBLE_API void warble_gatt_on_disconnect(WarbleGatt* obj, void* context, FnVoid_VoidP_WarbleGattP_Int handler);
 /**
  * Checks the current connection status
  * @param obj           Calling object

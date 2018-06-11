@@ -15,7 +15,7 @@ class WarbleScanner {
 public:
     virtual ~WarbleScanner() = 0;
 
-    virtual void set_handler(void* context, Void_VoidP_WarbleScanResultP handler) = 0;
+    virtual void set_handler(void* context, FnVoid_VoidP_WarbleScanResultP handler) = 0;
     virtual void start(std::int32_t nopts, const WarbleOption* opts) = 0;
     virtual void stop() = 0;
 };

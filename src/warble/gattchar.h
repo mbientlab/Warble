@@ -22,7 +22,7 @@ extern "C" {
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when the async task has completed
  */
-WARBLE_API void warble_gattchar_write_async(WarbleGattChar* obj, const WARBLE_UBYTE* value, WARBLE_UBYTE len, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
+WARBLE_API void warble_gattchar_write_async(WarbleGattChar* obj, const WARBLE_UBYTE* value, WARBLE_UBYTE len, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler);
 /**
  * Writes the value to the characteristic without requiring a response from the remote device
  * @param obj           Calling object
@@ -31,7 +31,7 @@ WARBLE_API void warble_gattchar_write_async(WarbleGattChar* obj, const WARBLE_UB
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when the async task has completed
  */
-WARBLE_API void warble_gattchar_write_without_resp_async(WarbleGattChar* obj, const WARBLE_UBYTE* value, WARBLE_UBYTE len, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
+WARBLE_API void warble_gattchar_write_without_resp_async(WarbleGattChar* obj, const WARBLE_UBYTE* value, WARBLE_UBYTE len, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler);
 
 /**
  * Reads the current value of the characteristic from the remote device
@@ -39,7 +39,7 @@ WARBLE_API void warble_gattchar_write_without_resp_async(WarbleGattChar* obj, co
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when the async task has completed
  */
-WARBLE_API void warble_gattchar_read_async(WarbleGattChar* obj, void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler);
+WARBLE_API void warble_gattchar_read_async(WarbleGattChar* obj, void* context, FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler);
 
 /**
  * Enables notifications on the characteristic
@@ -47,21 +47,21 @@ WARBLE_API void warble_gattchar_read_async(WarbleGattChar* obj, void* context, V
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when the async task has completed
  */
-WARBLE_API void warble_gattchar_enable_notifications_async(WarbleGattChar* obj, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
+WARBLE_API void warble_gattchar_enable_notifications_async(WarbleGattChar* obj, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler);
 /**
  * Disables notifications on the characteristic
  * @param obj           Calling object
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when the async task has completed
  */
-WARBLE_API void warble_gattchar_disable_notifications_async(WarbleGattChar* obj, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
+WARBLE_API void warble_gattchar_disable_notifications_async(WarbleGattChar* obj, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler);
 /**
  * Sets a handler to listen for characteristic notifications
  * @param obj           Calling object
  * @param context       Additional data for the callback function
  * @param handler       Callback function that is executed when notifications are received
  */
-WARBLE_API void warble_gattchar_on_notification_received(WarbleGattChar* obj, void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte handler);
+WARBLE_API void warble_gattchar_on_notification_received(WarbleGattChar* obj, void* context, FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte handler);
 
 /**
  * Gets the string representation of the characteristic's uuid

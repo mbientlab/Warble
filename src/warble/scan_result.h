@@ -30,4 +30,4 @@ typedef struct {
  * @param context               Additional data that was registered with the function
  * @param result                Advertising data received from a remote device
  */
-typedef void(*Void_VoidP_WarbleScanResultP)(void* context, const WarbleScanResult* result);
+typedef void(*FnVoid_VoidP_WarbleScanResultP)(void* context, const WarbleScanResult* result);

@@ -22,11 +22,11 @@ typedef struct WarbleGatt WarbleGatt;
  * @param caller            Object associated with the callback function
  * @param value             Additional data returned to the function
  */
-typedef void(*Void_VoidP_WarbleGattP_CharP)(void* context, WarbleGatt* caller, const char* value);
+typedef void(*FnVoid_VoidP_WarbleGattP_CharP)(void* context, WarbleGatt* caller, const char* value);
 /**
  * 3 parameter function that accepts <code>(void*, WarbleGatt*, int)</code> and has no return value
  * @param context           Additional data registered with the callback function
  * @param caller            Object associated with the callback function
  * @param value             Additional data returned to the function
  */
-typedef void(*Void_VoidP_WarbleGattP_Int)(void* context, WarbleGatt* caller, WARBLE_INT value);
+typedef void(*FnVoid_VoidP_WarbleGattP_Int)(void* context, WarbleGatt* caller, WARBLE_INT value);

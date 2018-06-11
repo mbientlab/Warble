@@ -26,7 +26,7 @@ void warble_gatt_delete(WarbleGatt* obj) {
     delete obj;
 }
 
-void warble_gatt_connect_async(WarbleGatt* obj, void* context, Void_VoidP_WarbleGattP_CharP handler) {
+void warble_gatt_connect_async(WarbleGatt* obj, void* context, FnVoid_VoidP_WarbleGattP_CharP handler) {
     obj->connect_async(context, handler);
 }
 
@@ -34,7 +34,7 @@ void warble_gatt_disconnect(WarbleGatt* obj) {
     obj->disconnect();
 }
 
-void warble_gatt_on_disconnect(WarbleGatt* obj, void* context, Void_VoidP_WarbleGattP_Int handler) {
+void warble_gatt_on_disconnect(WarbleGatt* obj, void* context, FnVoid_VoidP_WarbleGattP_Int handler) {
     obj->on_disconnect(context, handler);
 }
 

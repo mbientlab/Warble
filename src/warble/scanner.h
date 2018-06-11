@@ -18,7 +18,7 @@ extern "C" {
  * @param context           Additional data for the callback function
  * @param handler           Callback function that is called everytime advertising data is received
  */
-WARBLE_API void warble_scanner_set_handler(void* context, Void_VoidP_WarbleScanResultP handler);
+WARBLE_API void warble_scanner_set_handler(void* context, FnVoid_VoidP_WarbleScanResultP handler);
 /**
  * Starts a BLE scan
  * @param nopts             Number of options being passed

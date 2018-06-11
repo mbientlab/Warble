@@ -35,19 +35,19 @@ struct WarbleGattChar_Win10 : public WarbleGattChar {
 
     virtual ~WarbleGattChar_Win10();
 
-    virtual void write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
-    virtual void write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler);
+    virtual void write_async(const uint8_t* value, uint8_t len, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler);
+    virtual void write_without_resp_async(const uint8_t* value, uint8_t len, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler);
 
-    virtual void read_async(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler);
+    virtual void read_async(void* context, FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler);
 
-    virtual void enable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler);
-    virtual void disable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler);
-    virtual void on_notification_received(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte handler);
+    virtual void enable_notifications_async(void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler);
+    virtual void disable_notifications_async(void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler);
+    virtual void on_notification_received(void* context, FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte handler);
 
     virtual const char* get_uuid() const;
     virtual WarbleGatt* get_gatt() const;
 private:
-    inline void write_inner_async(GattWriteOption option, const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
+    inline void write_inner_async(GattWriteOption option, const uint8_t* value, uint8_t len, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler) {
         Array<byte>^ wrapper = ref new Array<byte>(len);
         for (uint8_t i = 0; i < len; i++) {
             wrapper[i] = value[i];
@@ -84,9 +84,9 @@ struct WarbleGatt_Win10 : public WarbleGatt {
     WarbleGatt_Win10(const char* mac, BluetoothAddressType addr_type);
     virtual ~WarbleGatt_Win10();
 
-    virtual void connect_async(void* context, Void_VoidP_WarbleGattP_CharP handler);
+    virtual void connect_async(void* context, FnVoid_VoidP_WarbleGattP_CharP handler);
     virtual void disconnect();
-    virtual void on_disconnect(void* context, Void_VoidP_WarbleGattP_Int handler);
+    virtual void on_disconnect(void* context, FnVoid_VoidP_WarbleGattP_Int handler);
     virtual bool is_connected() const;
 
     virtual WarbleGattChar* find_characteristic(const string& uuid) const;
@@ -98,7 +98,7 @@ private:
     string mac;
 
     void *on_disconnect_context;
-    Void_VoidP_WarbleGattP_Int on_disconnect_handler;
+    FnVoid_VoidP_WarbleGattP_Int on_disconnect_handler;
 
     BluetoothLEDevice^ device;
     BluetoothAddressType addr_type;
@@ -144,7 +144,7 @@ WarbleGatt_Win10::~WarbleGatt_Win10() {
     cleanup();
 }
 
-void WarbleGatt_Win10::connect_async(void* context, Void_VoidP_WarbleGattP_CharP handler) {
+void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_CharP handler) {
     task_completion_event<void> discover_device_event;
     task<void> event_set(discover_device_event);
 
@@ -235,7 +235,7 @@ void WarbleGatt_Win10::cleanup() {
     }
 }
 
-void WarbleGatt_Win10::on_disconnect(void* context, Void_VoidP_WarbleGattP_Int handler) {
+void WarbleGatt_Win10::on_disconnect(void* context, FnVoid_VoidP_WarbleGattP_Int handler) {
     on_disconnect_context = context;
     on_disconnect_handler = handler;
 }
@@ -282,15 +282,15 @@ WarbleGattChar_Win10::~WarbleGattChar_Win10() {
     characteristic = nullptr;
 }
 
-void WarbleGattChar_Win10::write_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
+void WarbleGattChar_Win10::write_async(const uint8_t* value, uint8_t len, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler) {
     write_inner_async(GattWriteOption::WriteWithResponse, value, len, context, handler);
 }
 
-void WarbleGattChar_Win10::write_without_resp_async(const uint8_t* value, uint8_t len, void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
+void WarbleGattChar_Win10::write_without_resp_async(const uint8_t* value, uint8_t len, void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler) {
     write_inner_async(GattWriteOption::WriteWithoutResponse, value, len, context, handler);
 }
 
-void WarbleGattChar_Win10::read_async(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler) {
+void WarbleGattChar_Win10::read_async(void* context, FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler) {
     create_task(characteristic->ReadValueAsync()).then([context, handler, this](GattReadResult^ result) {
         if (result->Status == GattCommunicationStatus::Success) {
             Array<byte>^ wrapper = ref new Array<byte>(result->Value->Length);
@@ -302,7 +302,7 @@ void WarbleGattChar_Win10::read_async(void* context, Void_VoidP_WarbleGattCharP_
     });
 }
 
-void WarbleGattChar_Win10::enable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
+void WarbleGattChar_Win10::enable_notifications_async(void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler) {
     create_task(characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue::Notify))
         .then([context, handler, this](GattCommunicationStatus status) {
             if (status == GattCommunicationStatus::Success) {
@@ -313,7 +313,7 @@ void WarbleGattChar_Win10::enable_notifications_async(void* context, Void_VoidP_
         });
 }
 
-void WarbleGattChar_Win10::disable_notifications_async(void* context, Void_VoidP_WarbleGattCharP_CharP handler) {
+void WarbleGattChar_Win10::disable_notifications_async(void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler) {
     create_task(characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue::None))
         .then([context, handler, this](GattCommunicationStatus status) {
             if (status == GattCommunicationStatus::Success) {
@@ -325,7 +325,7 @@ void WarbleGattChar_Win10::disable_notifications_async(void* context, Void_VoidP
         });
 }
 
-void WarbleGattChar_Win10::on_notification_received(void* context, Void_VoidP_WarbleGattCharP_UbyteP_Ubyte handler) {
+void WarbleGattChar_Win10::on_notification_received(void* context, FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte handler) {
     cookie = characteristic->ValueChanged += ref new TypedEventHandler<GattCharacteristic^, GattValueChangedEventArgs^>([context, handler, this](GattCharacteristic^ sender, GattValueChangedEventArgs^ obj) {
         Array<byte>^ wrapper = ref new Array<byte>(obj->CharacteristicValue->Length);
         CryptographicBuffer::CopyToByteArray(obj->CharacteristicValue, &wrapper);
