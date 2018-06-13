@@ -11,6 +11,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <locale>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <unistd.h>
@@ -18,6 +20,16 @@
 
 using namespace std;
 using namespace BLEPP;
+
+static inline string to_upper(const string& in) {
+    locale loc;
+    stringstream buffer;
+
+    for(auto s: in) {
+        buffer << toupper(s, loc);
+    }
+    return buffer.str();
+}
 
 class WarbleScanner_Blepp : public WarbleScanner {
 public:
@@ -88,15 +100,16 @@ void WarbleScanner_Blepp::start(int32_t nopts, const WarbleOption* opts) {
             if (FD_ISSET(scanner->get_fd(), &fds)) {
                 try {
                     for (const auto& ad : scanner->get_advertisements()) {
-                        auto it = seen_devices.find(ad.address);
+                        auto addr = to_upper(ad.address);
+                        auto it = seen_devices.find(addr);
                         if (it == seen_devices.end()) {
                             WarbleScanPrivateData private_data;
-                            seen_devices.emplace(ad.address, private_data);
-                            it = seen_devices.find(ad.address);
+                            seen_devices.emplace(addr, private_data);
+                            it = seen_devices.find(addr);
                         }
 
                         if (ad.type != LeAdvertisingEventType::SCAN_RSP && ad.local_name) {
-                            device_names.emplace(ad.address, ad.local_name->name);
+                            device_names.emplace(addr, ad.local_name->name);
 
                             it->second.service_uuids.clear();
                             for(const auto& uuid: ad.UUIDs) {
@@ -116,9 +129,9 @@ void WarbleScanner_Blepp::start(int32_t nopts, const WarbleOption* opts) {
                             }
 
                             if (scan_result_handler != nullptr) {
-                                auto name_it = device_names.find(ad.address);
+                                auto name_it = device_names.find(addr);
                                 WarbleScanResult result = {
-                                    ad.address.c_str(),
+                                    addr.c_str(),
                                     ad.local_name ? ad.local_name->name.c_str() : (name_it == device_names.end() ? "unknown" : name_it->second.c_str()),
                                     (int32_t) ad.rssi,
                                     &it->second
