@@ -67,7 +67,7 @@ DEPS:=$(OBJS:%.o=%.d)
 
 APP_OUTPUT:=$(REAL_DIST_DIR)/$(LIB_NAME)
 
-build: $(MODULES_BUILD_DIR) $(REAL_DIST_DIR) $(APP_OUTPUT)
+build: $(DEPS_BLEPP) $(MODULES_BUILD_DIR) $(REAL_DIST_DIR) $(APP_OUTPUT)
 
 $(REAL_BUILD_DIR)/%.o: %.cpp
 	$(CXX) -MMD -MP -MF "$(@:%.o=%.d)" -c -o $@ $(CXXFLAGS) $<
@@ -81,7 +81,7 @@ $(MODULES_BUILD_DIR):
 $(REAL_DIST_DIR):
 	mkdir -p $@
 
-$(APP_OUTPUT): $(DEPS_BLEPP) $(OBJS)
+$(APP_OUTPUT): $(OBJS)
 	$(CXX) -o $@ $(LD_FLAGS) $^
 	ln -sf $(LIB_NAME) $(REAL_DIST_DIR)/$(LIB_SHORT_NAME)
 	ln -sf $(LIB_SHORT_NAME) $(REAL_DIST_DIR)/$(LIB_SO_NAME)
