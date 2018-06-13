@@ -30,6 +30,7 @@ private:
     FnVoid_VoidP_WarbleScanResultP scan_result_handler;
 
     unordered_map<uint64_t, WarbleScanPrivateData> seen_devices;
+    unordered_map<uint64_t, string> device_names;
     BluetoothLEAdvertisementWatcher^ watcher;
 };
 
@@ -55,6 +56,10 @@ WarbleScanner_Win10::WarbleScanner_Win10() : scan_result_context(nullptr), scan_
                 string str = string(wide.begin(), wide.end()).substr(1, 36);
                 it->second.service_uuids.emplace(str);
             }
+            {
+                wstring wide(args->Advertisement->LocalName->Data());
+                device_names[args->BluetoothAddress] = string(wide.begin(), wide.end());
+            }
         } else if (scan_result_handler != nullptr) {
             it->second.manufacturer_data.clear();
 
@@ -72,17 +77,14 @@ WarbleScanner_Win10::WarbleScanner_Win10() : scan_result_context(nullptr), scan_
                 mft_data.Append(wrapper);
             }
 
-            wstring wide(args->Advertisement->LocalName->Data());
-            string copy(wide.begin(), wide.end());
-
             uint64_t mac_raw = args->BluetoothAddress;
             unsigned char* bytes = (unsigned char*)&mac_raw;
             char mac_str[18];
-            sprintf_s(mac_str, sizeof(mac_str), "%02x:%02x:%02x:%02x:%02x:%02x", bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
+            sprintf_s(mac_str, sizeof(mac_str), "%02X:%02X:%02X:%02X:%02X:%02X", bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
 
             WarbleScanResult result = {
                 mac_str,
-                copy.c_str(),
+                device_names[args->BluetoothAddress].c_str(),
                 (int32_t)args->RawSignalStrengthInDBm,
                 &it->second
             };
