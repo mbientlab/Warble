@@ -12,7 +12,7 @@ include $(VERSION_MK)
 
 CXXFLAGS:=-std=c++14 -fPIC -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Werror -DWARBLE_DLL -DWARBLE_DLL_EXPORT -Isrc 
 
-DEPS_BLEPP:=deps/libblepp/libble++.so
+DEPS_BLEPP:=deps/libblepp
 
 MODULES_SRC_DIR= $(addsuffix /cpp, $(addprefix src/, $(MODULES)))
 GEN:=
@@ -34,7 +34,7 @@ ifneq ($(KERNEL),Darwin)
     EXTENSION:=so
     LIB_SO_NAME:=lib$(APP_NAME).so
     LD_FLAGS:=$(LD_FLAGS)--soname
-    CXXFLAGS+= -DAPI_BLEPP -Ideps/libblepp
+    CXXFLAGS+= -DAPI_BLEPP -I$(DEPS_BLEPP)
 else
     EXTENSION:=dylib
     LD_FLAGS:=-dynamiclib $(LD_FLAGS)-install_name
@@ -56,7 +56,7 @@ endif
 LIB_SO_NAME:=lib$(APP_NAME).$(EXTENSION)
 LIB_SHORT_NAME:=$(LIB_SO_NAME).$(VERSION_MAJOR)
 LIB_NAME:=$(LIB_SO_NAME).$(VERSION)
-LD_FLAGS:=$(LD_FLAGS),$(LIB_SHORT_NAME) $(ARCH)
+LD_FLAGS:=$(LD_FLAGS),$(LIB_SHORT_NAME),-rpath-link=$(DEPS_BLEPP) $(ARCH) -L$(DEPS_BLEPP) -lble++
 
 REAL_DIST_DIR:=$(DIST_DIR)/$(CONFIG)/lib/$(MACHINE)
 REAL_BUILD_DIR:=$(BUILD_DIR)/$(MACHINE)/$(CONFIG)
@@ -67,9 +67,9 @@ DEPS:=$(OBJS:%.o=%.d)
 
 APP_OUTPUT:=$(REAL_DIST_DIR)/$(LIB_NAME)
 
-build: $(DEPS_BLEPP) $(MODULES_BUILD_DIR) $(REAL_DIST_DIR) $(APP_OUTPUT)
+build: $(APP_OUTPUT)
 
-$(REAL_BUILD_DIR)/%.o: %.cpp
+$(REAL_BUILD_DIR)/%.o: %.cpp $(MODULES_BUILD_DIR)
 	$(CXX) -MMD -MP -MF "$(@:%.o=%.d)" -c -o $@ $(CXXFLAGS) $<
 
 include $(addsuffix /config.mk, $(MODULES_SRC_DIR))
@@ -81,8 +81,8 @@ $(MODULES_BUILD_DIR):
 $(REAL_DIST_DIR):
 	mkdir -p $@
 
-$(APP_OUTPUT): $(OBJS)
-	$(CXX) -o $@ $(LD_FLAGS) $^
+$(APP_OUTPUT): $(REAL_DIST_DIR) $(DEPS_BLEPP)/libble++.so $(OBJS)
+	$(CXX) -o $@ $(LD_FLAGS) $(filter $^, $(OBJS))
 	ln -sf $(LIB_NAME) $(REAL_DIST_DIR)/$(LIB_SHORT_NAME)
 	ln -sf $(LIB_SHORT_NAME) $(REAL_DIST_DIR)/$(LIB_SO_NAME)
 
@@ -102,7 +102,7 @@ clean:
 	rm -Rf $(BUILD_DIR) $(DIST_DIR) $(GEN) $(VERSION_MK)
 
 cleanest: clean
-	make clean -C deps/libblepp
+	make clean -C $(DEPS_BLEPP)
 
 doc:
 	rm -Rf $(DOC_DIR)
@@ -112,5 +112,8 @@ doc:
 install: $(APP_OUTPUT)
 	install $(APP_OUTPUT) /usr/local/lib/$(LIB_SO_NAME)
 
-$(DEPS_BLEPP):
-	cd deps/libblepp; LDFLAGS=$(ARCH) ./configure; 	make
+$(DEPS_BLEPP)/libble++.so: $(DEPS_BLEPP)/Makefile
+	make -C $(DEPS_BLEPP)
+
+$(DEPS_BLEPP)/Makefile:
+	cd $(DEPS_BLEPP); LDFLAGS=$(ARCH) ./configure
