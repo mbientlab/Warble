@@ -56,7 +56,7 @@ endif
 LIB_SO_NAME:=lib$(APP_NAME).$(EXTENSION)
 LIB_SHORT_NAME:=$(LIB_SO_NAME).$(VERSION_MAJOR)
 LIB_NAME:=$(LIB_SO_NAME).$(VERSION)
-LD_FLAGS:=$(LD_FLAGS),$(LIB_SHORT_NAME),-rpath-link=$(DEPS_BLEPP) $(ARCH) -L$(DEPS_BLEPP) -lble++
+LD_FLAGS:=$(LD_FLAGS),$(LIB_SHORT_NAME),-rpath-link=$(DEPS_BLEPP) $(ARCH) -L$(DEPS_BLEPP)
 
 REAL_DIST_DIR:=$(DIST_DIR)/$(CONFIG)/lib/$(MACHINE)
 REAL_BUILD_DIR:=$(BUILD_DIR)/$(MACHINE)/$(CONFIG)
@@ -82,7 +82,7 @@ $(REAL_DIST_DIR):
 	mkdir -p $@
 
 $(APP_OUTPUT): $(REAL_DIST_DIR) $(DEPS_BLEPP)/libble++.so $(OBJS)
-	$(CXX) -o $@ $(LD_FLAGS) $(filter $^, $(OBJS))
+	$(CXX) -o $@ $(LD_FLAGS) $(filter $^, $(OBJS)) -lble++
 	ln -sf $(LIB_NAME) $(REAL_DIST_DIR)/$(LIB_SHORT_NAME)
 	ln -sf $(LIB_SHORT_NAME) $(REAL_DIST_DIR)/$(LIB_SO_NAME)
 
