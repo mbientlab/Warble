@@ -2,6 +2,9 @@
 Warble, besides being the chirping/singing of birds, is a wrapper around various Bluetooth LE libraries, providing a common C API for 
 Linux and Windows 10.
 
+Developers can use this library to connect to Bluetooth LE devices, read and write GATT characteristic values, and enable chatacteristic 
+notifications.
+
 # Build
 Beacuse this library is designed to work across two OSes, there will be different dependencies and build steps depending on the 
 target OS.
@@ -18,8 +21,7 @@ make
 ```
 
 ## Windows 10
-Windows 10 SDK provides Install Visual Studio 2017 along with the FCU Windows 10 SDK (10.0.16299.0).  You can build the solution in either 
-VS2017 or with MSBuild.  
+Install Visual Studio 2017 along with the FCU Windows 10 SDK (10.0.16299.0).  You can build the solution in VS2017 or with MSBuild.  
 
 ```bat
 cd vs2017
