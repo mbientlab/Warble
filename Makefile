@@ -69,7 +69,7 @@ APP_OUTPUT:=$(REAL_DIST_DIR)/$(LIB_NAME)
 
 build: $(APP_OUTPUT)
 
-$(REAL_BUILD_DIR)/%.o: %.cpp $(MODULES_BUILD_DIR)
+$(REAL_BUILD_DIR)/%.o: %.cpp
 	$(CXX) -MMD -MP -MF "$(@:%.o=%.d)" -c -o $@ $(CXXFLAGS) $<
 
 include $(addsuffix /config.mk, $(MODULES_SRC_DIR))
@@ -81,10 +81,11 @@ $(MODULES_BUILD_DIR):
 $(REAL_DIST_DIR):
 	mkdir -p $@
 
-$(APP_OUTPUT): $(REAL_DIST_DIR) $(DEPS_BLEPP)/libble++.a $(OBJS)
-	$(CXX) -o $@ $(LD_FLAGS) $(OBJS) $(DEPS_BLEPP)/libble++.a -lbluetooth
-	ln -sf $(LIB_NAME) $</$(LIB_SHORT_NAME)
-	ln -sf $(LIB_SHORT_NAME) $</$(LIB_SO_NAME)
+$(OBJS): | $(MODULES_BUILD_DIR)
+$(APP_OUTPUT): $(OBJS) $(DEPS_BLEPP)/libble++.a | $(REAL_DIST_DIR) 
+	$(CXX) -o $@ $(LD_FLAGS) $^ -lbluetooth
+	ln -sf $(LIB_NAME) $(REAL_DIST_DIR)/$(LIB_SHORT_NAME)
+	ln -sf $(LIB_SHORT_NAME) $(REAL_DIST_DIR)/$(LIB_SO_NAME)
 
 PUBLISH_NAME:=$(APP_NAME)-$(VERSION).tar
 PUBLISH_NAME_ZIP:=$(PUBLISH_NAME).gz
