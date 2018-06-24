@@ -43,12 +43,15 @@ endif
 ifeq ($(MACHINE),x86)
     CXXFLAGS+=-m32
     ARCH=-m32
+    INSTALL_LIB=lib
 else ifeq ($(MACHINE),x64)
     CXXFLAGS+=-m64
     ARCH=-m64
+    INSTALL_LIB=lib64
 else ifeq ($(MACHINE),arm)
     CXXFLAGS+=-marm
     ARCH=-marm
+    INSTALL_LIB=lib
 else
     $(error Unrecognized "MACHINE" value, use 'x86', 'x64', or 'arm')
 endif
@@ -56,7 +59,7 @@ endif
 LIB_SO_NAME:=lib$(APP_NAME).$(EXTENSION)
 LIB_SHORT_NAME:=$(LIB_SO_NAME).$(VERSION_MAJOR)
 LIB_NAME:=$(LIB_SO_NAME).$(VERSION)
-LD_FLAGS:=$(LD_FLAGS),$(LIB_SHORT_NAME),-rpath-link=$(DEPS_BLEPP) $(ARCH) -L$(DEPS_BLEPP)
+LD_FLAGS:=$(LD_FLAGS),$(LIB_SHORT_NAME) $(ARCH)
 
 REAL_DIST_DIR:=$(DIST_DIR)/$(CONFIG)/lib/$(MACHINE)
 REAL_BUILD_DIR:=$(BUILD_DIR)/$(MACHINE)/$(CONFIG)
@@ -68,6 +71,11 @@ DEPS:=$(OBJS:%.o=%.d)
 APP_OUTPUT:=$(REAL_DIST_DIR)/$(LIB_NAME)
 
 build: $(APP_OUTPUT)
+
+install: $(APP_OUTPUT)
+	cp -P $(REAL_DIST_DIR)/* /usr/local/$(INSTALL_LIB)
+	install -d /usr/local/include/$(APP_NAME)
+	install -m644  -D $(EXPORT_HEADERS) /usr/local/include/$(APP_NAME)
 
 $(REAL_BUILD_DIR)/%.o: %.cpp
 	$(CXX) -MMD -MP -MF "$(@:%.o=%.d)" -c -o $@ $(CXXFLAGS) $<
@@ -109,9 +117,6 @@ doc:
 	rm -Rf $(DOC_DIR)
 	mkdir $(DOC_DIR)
 	doxygen Doxyfile
-
-install: $(APP_OUTPUT)
-	install $(APP_OUTPUT) /usr/local/lib/$(LIB_SO_NAME)
 
 $(DEPS_BLEPP)/libble++.a: $(DEPS_BLEPP)/Makefile
 	make -C $(DEPS_BLEPP) -j
