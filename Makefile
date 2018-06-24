@@ -81,10 +81,10 @@ $(MODULES_BUILD_DIR):
 $(REAL_DIST_DIR):
 	mkdir -p $@
 
-$(APP_OUTPUT): $(REAL_DIST_DIR) $(DEPS_BLEPP)/libble++.so $(OBJS)
-	$(CXX) -o $@ $(LD_FLAGS) $(filter $^, $(OBJS)) -lble++
-	ln -sf $(LIB_NAME) $(REAL_DIST_DIR)/$(LIB_SHORT_NAME)
-	ln -sf $(LIB_SHORT_NAME) $(REAL_DIST_DIR)/$(LIB_SO_NAME)
+$(APP_OUTPUT): $(REAL_DIST_DIR) $(DEPS_BLEPP)/libble++.a $(OBJS)
+	$(CXX) -o $@ $(LD_FLAGS) $(OBJS) $(DEPS_BLEPP)/libble++.a -lbluetooth
+	ln -sf $(LIB_NAME) $</$(LIB_SHORT_NAME)
+	ln -sf $(LIB_SHORT_NAME) $</$(LIB_SO_NAME)
 
 PUBLISH_NAME:=$(APP_NAME)-$(VERSION).tar
 PUBLISH_NAME_ZIP:=$(PUBLISH_NAME).gz
@@ -112,8 +112,8 @@ doc:
 install: $(APP_OUTPUT)
 	install $(APP_OUTPUT) /usr/local/lib/$(LIB_SO_NAME)
 
-$(DEPS_BLEPP)/libble++.so: $(DEPS_BLEPP)/Makefile
-	make -C $(DEPS_BLEPP)
+$(DEPS_BLEPP)/libble++.a: $(DEPS_BLEPP)/Makefile
+	make -C $(DEPS_BLEPP) -j
 
 $(DEPS_BLEPP)/Makefile:
 	cd $(DEPS_BLEPP); LDFLAGS=$(ARCH) ./configure
