@@ -56,6 +56,6 @@ int main(int argc, char** argv) {
 
     warble_gatt_disconnect(gatt);
     
-    cout << "Donnected? " << warble_gatt_is_connected(gatt) << endl;
+    cout << "Connected? " << warble_gatt_is_connected(gatt) << endl;
     return 0;
 }

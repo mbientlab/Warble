@@ -30,6 +30,23 @@ using namespace Windows::Foundation;
 using namespace Windows::Security::Cryptography;
 using namespace Platform;
 
+#define CHECK_TASK_ERROR(f)\
+then([f](task<void> previous) {\
+    try {\
+        previous.wait();\
+    } catch (const exception& e) {\
+        f(e.what());\
+    } catch (Exception^ e) {\
+        wstringstream stream;\
+        stream << e->Message->Data() << " (HRESULT = " << e->HResult << ")";\
+\
+        wstring wide(stream.str());\
+        string narrow(wide.begin(), wide.end());\
+\
+        f(narrow.data());\
+    }\
+})
+
 struct WarbleGattChar_Win10 : public WarbleGattChar {
     WarbleGattChar_Win10(WarbleGatt* owner, GattCharacteristic^ characteristic);
 
@@ -53,14 +70,11 @@ private:
             wrapper[i] = value[i];
         }
 
+        auto partial = bind(handler, context, this, placeholders::_1);
         create_task(characteristic->WriteValueAsync(CryptographicBuffer::CreateFromByteArray(wrapper), option))
-            .then([context, handler, this](GattCommunicationStatus status) {
-            if (status != GattCommunicationStatus::Success) {
-                handler(context, this, WARBLE_GATT_WRITE_ERROR);
-            } else {
-                handler(context, this, nullptr);
-            }
-        });
+            .then([partial](GattCommunicationStatus status) {
+                partial(status == GattCommunicationStatus::Success ? nullptr : WARBLE_GATT_WRITE_ERROR);
+            }).CHECK_TASK_ERROR(partial);
     }
 
     WarbleGatt* owner;
@@ -167,6 +181,12 @@ void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
                 cookie = device->ConnectionStatusChanged += ref new TypedEventHandler<BluetoothLEDevice^, Object^>([this](BluetoothLEDevice^ sender, Object^ args) {
                     switch (sender->ConnectionStatus) {
                     case BluetoothConnectionStatus::Disconnected:
+                        for (auto it : characteristics) {
+                            delete it.second;
+                        }
+                        characteristics.clear();
+                        services.clear();
+
                         if (on_disconnect_handler != nullptr) {
                             on_disconnect_handler(on_disconnect_context, this, 0);
                         }
@@ -180,6 +200,7 @@ void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
         });
     }
 
+    auto partial = bind(handler, context, this, placeholders::_1);
     event_set.then([this]() {
         return create_task(device->GetGattServicesAsync());
     }).then([this](GattDeviceServicesResult^ result) {
@@ -194,7 +215,7 @@ void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
         }
 
         throw runtime_error("Failed to discover gatt services");
-    }).then([this](vector<GattCharacteristicsResult^> results) {
+    }).then([this, partial](vector<GattCharacteristicsResult^> results) {
         for (auto it : results) {
             if (it->Status == GattCommunicationStatus::Success) {
                 for (auto it2 : it->Characteristics) {
@@ -204,14 +225,8 @@ void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
                 throw runtime_error("Failed to discover gatt characteristics");
             }
         }
-    }).then([this, handler, context](task<void> previous) {
-        try {
-            previous.wait();
-            handler(context, this, nullptr);
-        } catch (const exception& e) {
-            handler(context, this, e.what());
-        }
-    });
+        partial(nullptr);
+    }).CHECK_TASK_ERROR(partial);
 }
 
 void WarbleGatt_Win10::disconnect() {
@@ -244,32 +259,27 @@ bool WarbleGatt_Win10::is_connected() const {
     return device != nullptr && device->ConnectionStatus == BluetoothConnectionStatus::Connected;
 }
 
-#define UUID_TO_GUID(uuid)\
-    wstring wide_uuid(uuid.begin(), uuid.end());\
-    wstringstream stream;\
-    stream << L'{' << wide_uuid << L'}';\
-\
-    auto casted = ref new Platform::String(stream.str().c_str());\
-    GUID rawguid;\
-    HRESULT hr = IIDFromString(casted->Data(), &rawguid);
+static inline HRESULT string_to_guid(const string& uuid, GUID& raw) {
+    wstring wide_uuid(uuid.begin(), uuid.end());
+    wstringstream stream;
+    stream << L'{' << wide_uuid << L'}';
+
+    auto casted = ref new Platform::String(stream.str().c_str());
+    return IIDFromString(casted->Data(), &raw);
+}
 
 WarbleGattChar* WarbleGatt_Win10::find_characteristic(const string& uuid) const {
-    UUID_TO_GUID(uuid);
-
-    if (SUCCEEDED(hr)) {
-        auto it = characteristics.find(rawguid);
+    GUID raw;
+    if (SUCCEEDED(string_to_guid(uuid, raw))) {
+        auto it = characteristics.find(raw);
         return it == characteristics.end() ? nullptr : it->second;
     }
     return nullptr;
 }
 
 bool WarbleGatt_Win10::service_exists(const string& uuid) const {
-    UUID_TO_GUID(uuid);    
-
-    if (SUCCEEDED(hr)) {
-        return services.count(rawguid);
-    }
-    return 0;
+    GUID raw;
+    return SUCCEEDED(string_to_guid(uuid, raw)) ? services.count(raw) : 0;
 }
 
 WarbleGattChar_Win10::WarbleGattChar_Win10(WarbleGatt* owner, GattCharacteristic^ characteristic) : owner(owner), characteristic(characteristic) {
@@ -291,38 +301,36 @@ void WarbleGattChar_Win10::write_without_resp_async(const uint8_t* value, uint8_
 }
 
 void WarbleGattChar_Win10::read_async(void* context, FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte_CharP handler) {
-    create_task(characteristic->ReadValueAsync()).then([context, handler, this](GattReadResult^ result) {
+    auto partial = bind(handler, context, this, placeholders::_1, placeholders::_2, placeholders::_3);
+    auto partial_error = bind(partial, nullptr, 0, placeholders::_1);
+
+    create_task(characteristic->ReadValueAsync()).then([partial, partial_error](GattReadResult^ result) {
         if (result->Status == GattCommunicationStatus::Success) {
             Array<byte>^ wrapper = ref new Array<byte>(result->Value->Length);
             CryptographicBuffer::CopyToByteArray(result->Value, &wrapper);
-            handler(context, this, (uint8_t*)wrapper->Data, wrapper->Length, nullptr);
+            partial((uint8_t*)wrapper->Data, wrapper->Length, nullptr);
         } else {
-            handler(context, this, nullptr, 0, WARBLE_GATT_READ_ERROR);
+            partial_error(WARBLE_GATT_READ_ERROR);
         }
-    });
+    }).CHECK_TASK_ERROR(partial_error);
 }
 
 void WarbleGattChar_Win10::enable_notifications_async(void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler) {
+    auto partial = bind(handler, context, this, placeholders::_1);
+    
     create_task(characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue::Notify))
-        .then([context, handler, this](GattCommunicationStatus status) {
-            if (status == GattCommunicationStatus::Success) {
-                handler(context, this, nullptr);
-            } else {
-                handler(context, this, WARBLE_GATT_ENABLE_NOTIFY_ERROR);
-            }
-        });
+        .then([partial](GattCommunicationStatus status) {
+            partial(status == GattCommunicationStatus::Success ? nullptr : WARBLE_GATT_ENABLE_NOTIFY_ERROR);
+        }).CHECK_TASK_ERROR(partial);
 }
 
 void WarbleGattChar_Win10::disable_notifications_async(void* context, FnVoid_VoidP_WarbleGattCharP_CharP handler) {
+    auto partial = bind(handler, context, this, placeholders::_1);
+
     create_task(characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue::None))
-        .then([context, handler, this](GattCommunicationStatus status) {
-            if (status == GattCommunicationStatus::Success) {
-                characteristic->ValueChanged -= cookie;
-                handler(context, this, nullptr);
-            } else {
-                handler(context, this, WARBLE_GATT_DISABLE_NOTIFY_ERROR);
-            }
-        });
+        .then([partial](GattCommunicationStatus status) {
+            partial(status == GattCommunicationStatus::Success ? nullptr : WARBLE_GATT_DISABLE_NOTIFY_ERROR);
+        }).CHECK_TASK_ERROR(partial);
 }
 
 void WarbleGattChar_Win10::on_notification_received(void* context, FnVoid_VoidP_WarbleGattCharP_UbyteP_Ubyte handler) {
