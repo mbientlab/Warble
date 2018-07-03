@@ -107,7 +107,7 @@ struct WarbleGatt_Win10 : public WarbleGatt {
     virtual bool service_exists(const string& uuid) const;
 
 private:
-    void cleanup();
+    void cleanup(bool dispose = true);
 
     string mac;
 
@@ -181,11 +181,7 @@ void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
                 cookie = device->ConnectionStatusChanged += ref new TypedEventHandler<BluetoothLEDevice^, Object^>([this](BluetoothLEDevice^ sender, Object^ args) {
                     switch (sender->ConnectionStatus) {
                     case BluetoothConnectionStatus::Disconnected:
-                        for (auto it : characteristics) {
-                            delete it.second;
-                        }
-                        characteristics.clear();
-                        services.clear();
+                        cleanup(false);
 
                         if (on_disconnect_handler != nullptr) {
                             on_disconnect_handler(on_disconnect_context, this, 0);
@@ -237,14 +233,14 @@ void WarbleGatt_Win10::disconnect() {
     }
 }
 
-void WarbleGatt_Win10::cleanup() {
+void WarbleGatt_Win10::cleanup(bool dispose) {
     for (auto it : characteristics) {
         delete it.second;
     }
     characteristics.clear();
     services.clear();
 
-    if (device != nullptr) {
+    if (dispose && device != nullptr) {
         device->ConnectionStatusChanged -= cookie;
         device = nullptr;
     }
