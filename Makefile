@@ -91,7 +91,7 @@ $(REAL_DIST_DIR):
 
 $(OBJS): | $(MODULES_BUILD_DIR)
 $(APP_OUTPUT): $(OBJS) $(DEPS_BLEPP)/libble++.a | $(REAL_DIST_DIR) 
-	$(CXX) -o $@ $(LD_FLAGS) $^ -lbluetooth
+	$(CXX) -o $@ $(LD_FLAGS) $^ -lbluetooth -lpthread
 	ln -sf $(LIB_NAME) $(REAL_DIST_DIR)/$(LIB_SHORT_NAME)
 	ln -sf $(LIB_SHORT_NAME) $(REAL_DIST_DIR)/$(LIB_SO_NAME)
 

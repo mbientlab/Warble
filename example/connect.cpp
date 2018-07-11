@@ -1,4 +1,4 @@
-// compile: g++ -o connect example/connect.cpp -std=c++14 -Isrc -Ldist/release/lib/x64 -Ldeps/libblepp -lwarble -lpthread -lble++
+// compile: g++ -o connect example/connect.cpp -std=c++14 -Isrc -Ldist/release/lib/x64 -lwarble
 #include "warble/warble.h"
 
 #include <chrono>

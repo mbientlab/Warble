@@ -1,4 +1,4 @@
-// compile: g++ -o read_dev_info example/read_dev_info.cpp -std=c++14 -Isrc -Ldist/release/lib/x64 -Ldeps/libblepp -lwarble -lpthread -lble++
+// compile: g++ -o read_dev_info example/read_dev_info.cpp -std=c++14 -Isrc -Ldist/release/lib/x64 -lwarble
 #include "warble/warble.h"
 
 #include <condition_variable>
