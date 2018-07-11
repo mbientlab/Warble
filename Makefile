@@ -43,15 +43,15 @@ endif
 ifeq ($(MACHINE),x86)
     CXXFLAGS+=-m32
     ARCH=-m32
-    INSTALL_LIB=lib
+    INSTALL_LIB?=lib
 else ifeq ($(MACHINE),x64)
     CXXFLAGS+=-m64
     ARCH=-m64
-    INSTALL_LIB=lib64
+    INSTALL_LIB?=lib64
 else ifeq ($(MACHINE),arm)
     CXXFLAGS+=-marm
     ARCH=-marm
-    INSTALL_LIB=lib
+    INSTALL_LIB?=lib
 else
     $(error Unrecognized "MACHINE" value, use 'x86', 'x64', or 'arm')
 endif
@@ -73,9 +73,9 @@ APP_OUTPUT:=$(REAL_DIST_DIR)/$(LIB_NAME)
 build: $(APP_OUTPUT)
 
 install: $(APP_OUTPUT)
-	cp -P $(REAL_DIST_DIR)/* /usr/local/$(INSTALL_LIB)
-	install -d /usr/local/include/$(APP_NAME)
-	install -m644  -D $(EXPORT_HEADERS) /usr/local/include/$(APP_NAME)
+	cp -P $(REAL_DIST_DIR)/* $(INSTALL_PATH)/$(INSTALL_LIB)
+	install -d $(INSTALL_PATH)/include/$(APP_NAME)
+	install -m644  -D $(EXPORT_HEADERS) $(INSTALL_PATH)/include/$(APP_NAME)
 
 $(REAL_BUILD_DIR)/%.o: %.cpp
 	$(CXX) -MMD -MP -MF "$(@:%.o=%.d)" -c -o $@ $(CXXFLAGS) $<
@@ -108,7 +108,7 @@ $(BUILD_DIR)/$(PUBLISH_NAME): build
 	tar -rf $@ -C $(DIST_DIR) .
 
 clean:
-	rm -Rf $(BUILD_DIR) $(DIST_DIR) $(GEN) $(VERSION_MK)
+	rm -Rf $(BUILD_DIR) $(DIST_DIR) $(GEN)
 
 cleanest: clean
 	make clean -C $(DEPS_BLEPP)

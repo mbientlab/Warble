@@ -18,7 +18,7 @@ ifndef MACHINE
     endif
 endif
 
-
+INSTALL_PATH?=/usr/local
 DOC_DIR?=doc
 BUILD_DIR?=build
 DIST_DIR?=dist
