@@ -37,10 +37,10 @@ struct WarbleGatt_Blepp : public WarbleGatt {
     virtual bool service_exists(const std::string& uuid) const;
 
 private:
+    friend WarbleGattChar_Blepp;
+
     void clear_characteristics();
 
-    friend WarbleGattChar_Blepp;
-    
     string mac, hci_mac;
 
     void *on_disconnect_context;
@@ -55,7 +55,7 @@ private:
     unordered_set<string> services;
 
     thread blepp_state_machine;
-    bool public_addr, connected;
+    bool public_addr, connected, local_dc;
 };
 
 struct WarbleGattChar_Blepp : public WarbleGattChar {
@@ -118,7 +118,7 @@ WarbleGatt* warblegatt_create(std::int32_t nopts, const WarbleOption* opts) {
 }
 
 WarbleGatt_Blepp::WarbleGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr) : 
-        mac(mac), hci_mac(hci_mac), on_disconnect_context(nullptr), on_disconnect_handler(nullptr), active_char(nullptr), public_addr(public_addr) {
+        mac(mac), hci_mac(hci_mac), on_disconnect_context(nullptr), on_disconnect_handler(nullptr), active_char(nullptr), public_addr(public_addr), connected(false), local_dc(false) {
     gatt.cb_connected = [this]() {
         connected = true;
         gatt.read_primary_services();
@@ -151,11 +151,12 @@ void WarbleGatt_Blepp::clear_characteristics() {
 
 void WarbleGatt_Blepp::connect_async(void* context, FnVoid_VoidP_WarbleGattP_CharP handler) {
     thread th([this, context, handler]() {
+        local_dc = false;
+
         bool terminate = false;
         int dc_code;
 
         gatt.cb_disconnected = [this, &terminate, &dc_code](BLEGATTStateMachine::Disconnect d) {
-            connected = false;
             if (active_char != nullptr && active_char->gatt_op_error_handler != nullptr) {
                 active_char->gatt_op_error_handler(BLEGATTStateMachine::get_disconnect_string(d));
             }
@@ -188,7 +189,7 @@ void WarbleGatt_Blepp::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
             }
 
             int status = select(gatt.socket() + 1, &read_set, &write_set, nullptr, timeout);
-            if (!terminate && status > 0) {
+            if (!local_dc && !terminate && status > 0) {
                 if(FD_ISSET(gatt.socket(), &write_set)) {
                     gatt.write_and_process_next();
                 }
@@ -202,17 +203,21 @@ void WarbleGatt_Blepp::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
         };
 
         gatt.connect(mac, false, public_addr, hci_mac);
-        timeval connect_timeout = { 10, 0 };
-        int status = socket_select(&connect_timeout);
+        timeval timeout = { 10, 0 };
+        int status = socket_select(&timeout);
         if (status <= 0) {
-            terminate = true;
             gatt.close();
             handler(context, this, status == 0 ? WARBLE_CONNECT_TIMEOUT : WARBLE_GATT_ERROR);
         } else {
-            terminate = false;
-            while(!terminate && socket_select(nullptr) > 0) {
+            while(!local_dc && !terminate && socket_select(nullptr) > 0) {
             }
+            
+            if (!local_dc) {
+                gatt.cb_disconnected = [](BLEGATTStateMachine::Disconnect d) { };
+            }
+            gatt.close();
 
+            connected = false;
             if (on_disconnect_handler != nullptr) {
                 on_disconnect_handler(on_disconnect_context, this, dc_code);
             }
@@ -223,7 +228,8 @@ void WarbleGatt_Blepp::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
 }
 
 void WarbleGatt_Blepp::disconnect() {
-    gatt.close();
+    local_dc = true;
+    shutdown(gatt.socket(), SHUT_RDWR);
 }
 
 void WarbleGatt_Blepp::on_disconnect(void* context, FnVoid_VoidP_WarbleGattP_Int handler) {

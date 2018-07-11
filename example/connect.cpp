@@ -43,19 +43,29 @@ int main(int argc, char** argv) {
 
     auto gatt = warble_gatt_create_with_options(argc - 1, config_options);
 #endif
-    warble_gatt_connect_async(gatt, nullptr, [](void* context, WarbleGatt* caller, const char* value) {
-        if (value != nullptr) {
-            cout << "Error connecting: " << value << endl;
-        }
-        cout << "Connected? " << warble_gatt_is_connected(caller) << endl;
+    for(int i = 0; i < 3; i++) {
+        cout << "Connecting to " << argv[1] << endl;
+        warble_gatt_connect_async(gatt, nullptr, [](void* context, WarbleGatt* caller, const char* value) {
+            if (value != nullptr) {
+                cout << "Error: " << value << endl;
+            } else {
+                cout << "Am I connected? " << warble_gatt_is_connected(caller) << endl;
 
-        this_thread::sleep_for(5s);
-        cv.notify_all();
-    });
-    cv.wait(lock);
+                this_thread::sleep_for(5s);
+            }
+            cv.notify_all();
+        });
+        cv.wait(lock);
 
-    warble_gatt_disconnect(gatt);
-    
-    cout << "Connected? " << warble_gatt_is_connected(gatt) << endl;
+        cout << "Disconnecting..." << endl;
+        warble_gatt_on_disconnect(gatt, nullptr, [](void* context, WarbleGatt* caller, int32_t status) {
+            cout << "disconnected, status = " << status << endl;
+            cv.notify_all();
+        });
+        warble_gatt_disconnect(gatt);
+        
+        cv.wait(lock, [gatt] {return !warble_gatt_is_connected(gatt); });
+        cout << "Am I connected? " << warble_gatt_is_connected(gatt) << endl;
+    }
     return 0;
 }
