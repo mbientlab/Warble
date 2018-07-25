@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
         if ((man_data = warble_scan_result_get_manufacturer_data(result, 0x626d)) != nullptr) {
             cout << endl << "    value: [";
 
-            for (int j = 0; j < man_data->value_size; j++) {
+            for (uint32_t j = 0; j < man_data->value_size; j++) {
                 if (j != 0) {
                     cout << ", ";
                 }
@@ -37,16 +37,20 @@ int main(int argc, char** argv) {
         cout << "------" << endl;
     });
     
-    if (argc >= 2) {
-        WarbleOption config[1] = {
-            {"scan-type", argv[1]}
-        };
-        warble_scanner_start(1, config);
-    } else {
-        warble_scanner_start(0, nullptr);
-    }
-    this_thread::sleep_for(10s);
-
+    cout << "== active ble scan ==" << endl;
+    // default is to do active scan
+    warble_scanner_start(0, nullptr);
+    this_thread::sleep_for(5s);
     warble_scanner_stop();
+
+    cout << "== passive ble scan ==" << endl;
+    // set to passive scan type
+    WarbleOption config[1] = {
+        { "scan-type", "passive" }
+    };
+    warble_scanner_start(1, config);
+    this_thread::sleep_for(5s);
+    warble_scanner_stop();
+
     return 0;
 }
