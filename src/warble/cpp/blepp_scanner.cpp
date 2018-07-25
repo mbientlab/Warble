@@ -42,8 +42,6 @@ public:
 
 private:
     BLEPP::HCIScanner* scanner;
-    unordered_map<string, WarbleScanPrivateData> seen_devices;
-    unordered_map<string, string> device_names;
 
     void* scan_result_context;
     FnVoid_VoidP_WarbleScanResultP scan_result_handler;
@@ -73,20 +71,31 @@ void WarbleScanner_Blepp::start(int32_t nopts, const WarbleOption* opts) {
     }
 
     const char *device = "";
+    auto scanType = HCIScanner::ScanType::Active;
     unordered_map<string, function<void(const char*)>> arg_processors = {
-        { "hci", [&device](const char* value) { device = value; } }
+        { "hci", [&device](const char* value) { device = value; } },
+        { "scan-type", [&scanType](const char* value) {
+            if (!strcmp(value, "passive")) {
+                scanType = HCIScanner::ScanType::Passive;
+            } else if (strcmp(value, "active")) {
+                throw runtime_error("invalid value for \'scan-type\' option (blepp api): one of [active, passive]");
+            }
+        }}
     };
     for(int i = 0; i < nopts; i++) {
         auto it = arg_processors.find(opts[i].key);
         if (it == arg_processors.end()) {
-            throw runtime_error(string("option '") + opts[i].key + "' does not exist");
+            throw runtime_error(string("invalid ble scan option '") + opts[i].key + "'");
         }
         (it->second)(opts[i].value);
     }
 
-    thread th([this, device]() {
+    thread th([this, device, scanType]() {
+        unordered_map<string, WarbleScanPrivateData> seen_devices;
+        unordered_map<string, string> device_names;
+
         terminate_scan = false;
-        scanner = new HCIScanner(true, HCIScanner::FilterDuplicates::Off, HCIScanner::ScanType::Active, device);
+        scanner = new HCIScanner(true, HCIScanner::FilterDuplicates::Off, scanType, device);
 
         while (!terminate_scan) {
             timeval timeout = { 0, 300000 };
@@ -109,11 +118,26 @@ void WarbleScanner_Blepp::start(int32_t nopts, const WarbleOption* opts) {
                         }
 
                         if (ad.type != LeAdvertisingEventType::SCAN_RSP && ad.local_name) {
-                            device_names.emplace(addr, ad.local_name->name);
+                            if (scanType == HCIScanner::ScanType::Passive) {
+                                WarbleScanPrivateData private_data;
+                                for(const auto& uuid: ad.UUIDs) {
+                                    private_data.service_uuids.insert(uuid_to_string(uuid));
+                                }
 
-                            it->second.service_uuids.clear();
-                            for(const auto& uuid: ad.UUIDs) {
-                                it->second.service_uuids.insert(uuid_to_string(uuid));
+                                WarbleScanResult result = {
+                                    addr.c_str(),
+                                    ad.local_name ? ad.local_name->name.c_str() : "",
+                                    (int32_t) ad.rssi,
+                                    &private_data
+                                };
+                                scan_result_handler(scan_result_context, &result);
+                            } else {
+                                device_names.emplace(addr, ad.local_name->name);
+
+                                it->second.service_uuids.clear();
+                                for(const auto& uuid: ad.UUIDs) {
+                                    it->second.service_uuids.insert(uuid_to_string(uuid));
+                                }
                             }
                         } else if (ad.type == LeAdvertisingEventType::SCAN_RSP) {
                             it->second.manufacturer_data.clear();
@@ -145,6 +169,12 @@ void WarbleScanner_Blepp::start(int32_t nopts, const WarbleOption* opts) {
                 }
             }
         }
+
+        delete scanner;
+        scanner = nullptr;
+
+        seen_devices.clear();
+        device_names.clear();
     });
     swap(scan_thread, th);
 }
@@ -152,11 +182,6 @@ void WarbleScanner_Blepp::start(int32_t nopts, const WarbleOption* opts) {
 void WarbleScanner_Blepp::stop() {
     terminate_scan = true;
     scan_thread.join();
-
-    delete scanner;
-    scanner = nullptr;
-    seen_devices.clear();
-    device_names.clear();
 }
 
 #endif

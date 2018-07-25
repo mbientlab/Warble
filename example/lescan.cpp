@@ -37,7 +37,14 @@ int main(int argc, char** argv) {
         cout << "------" << endl;
     });
     
-    warble_scanner_start(0, nullptr);
+    if (argc >= 2) {
+        WarbleOption config[1] = {
+            {"scan-type", argv[1]}
+        };
+        warble_scanner_start(1, config);
+    } else {
+        warble_scanner_start(0, nullptr);
+    }
     this_thread::sleep_for(10s);
 
     warble_scanner_stop();
