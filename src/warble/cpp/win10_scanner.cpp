@@ -40,9 +40,20 @@ WarbleScanner* warble_scanner_create() {
 
 WarbleScanner_Win10::WarbleScanner_Win10() : scan_result_context(nullptr), scan_result_handler(nullptr) {
     watcher = ref new BluetoothLEAdvertisementWatcher();
-    watcher->ScanningMode = BluetoothLEScanningMode::Active;
     watcher->Received += ref new TypedEventHandler<BluetoothLEAdvertisementWatcher^, BluetoothLEAdvertisementReceivedEventArgs^>([this](BluetoothLEAdvertisementWatcher^ watcher, BluetoothLEAdvertisementReceivedEventArgs^ args) {
         auto it = seen_devices.find(args->BluetoothAddress);
+        auto add_service_uuids = [args](unordered_set<string>& uuids) {
+            for (auto iter = args->Advertisement->ServiceUuids->First(); iter->HasCurrent; iter->MoveNext()) {
+                wstring wide(iter->Current.ToString()->Data());
+                string str = string(wide.begin(), wide.end()).substr(1, 36);
+                uuids.emplace(str);
+            }
+        };
+        auto raw_mac_to_str = [args](char* str, size_t length) {
+            uint64_t mac_raw = args->BluetoothAddress;
+            unsigned char* bytes = (unsigned char*)&mac_raw;
+            sprintf_s(str, length, "%02X:%02X:%02X:%02X:%02X:%02X", bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
+        };
 
         if (it == seen_devices.end()) {
             WarbleScanPrivateData private_data;
@@ -51,14 +62,26 @@ WarbleScanner_Win10::WarbleScanner_Win10() : scan_result_context(nullptr), scan_
         }
 
         if (args->AdvertisementType != BluetoothLEAdvertisementType::ScanResponse) {
-            for (auto iter = args->Advertisement->ServiceUuids->First(); iter->HasCurrent; iter->MoveNext()) {
-                wstring wide(iter->Current.ToString()->Data());
-                string str = string(wide.begin(), wide.end()).substr(1, 36);
-                it->second.service_uuids.emplace(str);
-            }
-            {
-                wstring wide(args->Advertisement->LocalName->Data());
-                device_names[args->BluetoothAddress] = string(wide.begin(), wide.end());
+            wstring wide(args->Advertisement->LocalName->Data());
+            string narrow(wide.begin(), wide.end());
+
+            if (watcher->ScanningMode == BluetoothLEScanningMode::Passive) {
+                WarbleScanPrivateData private_data;
+                add_service_uuids(private_data.service_uuids);
+
+                char buffer[18];
+                raw_mac_to_str(buffer, sizeof(buffer));
+                WarbleScanResult result = {
+                    buffer,
+                    narrow.c_str(),
+                    (int32_t)args->RawSignalStrengthInDBm,
+                    &private_data
+                };
+                scan_result_handler(scan_result_context, &result);
+
+            } else {
+                add_service_uuids(it->second.service_uuids);
+                device_names[args->BluetoothAddress] = narrow;
             }
         } else if (scan_result_handler != nullptr) {
             it->second.manufacturer_data.clear();
@@ -77,13 +100,10 @@ WarbleScanner_Win10::WarbleScanner_Win10() : scan_result_context(nullptr), scan_
                 mft_data.Append(wrapper);
             }
 
-            uint64_t mac_raw = args->BluetoothAddress;
-            unsigned char* bytes = (unsigned char*)&mac_raw;
-            char mac_str[18];
-            sprintf_s(mac_str, sizeof(mac_str), "%02X:%02X:%02X:%02X:%02X:%02X", bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]);
-
+            char buffer[18];
+            raw_mac_to_str(buffer, sizeof(buffer));
             WarbleScanResult result = {
-                mac_str,
+                buffer,
                 device_names[args->BluetoothAddress].c_str(),
                 (int32_t)args->RawSignalStrengthInDBm,
                 &it->second
@@ -104,6 +124,25 @@ void WarbleScanner_Win10::set_handler(void* context, FnVoid_VoidP_WarbleScanResu
 }
 
 void WarbleScanner_Win10::start(int32_t nopts, const WarbleOption* opts) {
+    auto scanType = BluetoothLEScanningMode::Active;
+    unordered_map<string, function<void(const char*)>> arg_processors = {
+        { "scan-type", [&scanType](const char* value) {
+            if (!strcmp(value, "passive")) {
+                scanType = BluetoothLEScanningMode::Passive;
+            } else if (strcmp(value, "active")) {
+                throw runtime_error("invalid value for \'scan-type\' option (win10 api): one of [active, passive]");
+            }
+        }}
+    };
+    for (int i = 0; i < nopts; i++) {
+        auto it = arg_processors.find(opts[i].key);
+        if (it == arg_processors.end()) {
+            throw runtime_error(string("invalid ble scan option '") + opts[i].key + "'");
+        }
+        (it->second)(opts[i].value);
+    }
+
+    watcher->ScanningMode = scanType;
     watcher->Start();
 }
 

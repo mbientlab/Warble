@@ -140,7 +140,7 @@ WarbleGatt* warblegatt_create(int32_t nopts, const WarbleOption* opts) {
     for (int i = 0; i < nopts; i++) {
         auto it = arg_processors.find(opts[i].key);
         if (it == arg_processors.end()) {
-            throw runtime_error(string("option '") + opts[i].key + "' does not exist");
+            throw runtime_error(string("invalid gatt option '") + opts[i].key + "'");
         }
         (it->second)(opts[i].value);
     }
