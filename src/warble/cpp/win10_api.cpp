@@ -196,7 +196,12 @@ void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
         });
     }
 
-    auto partial = bind(handler, context, this, placeholders::_1);
+    auto partial = bind(handler, context, this, placeholders::_1); 
+    auto error_handler = [this, partial](const char* msg) {
+        cleanup();
+        partial(msg);
+    };
+
     event_set.then([this]() {
         return create_task(device->GetGattServicesAsync());
     }).then([this](GattDeviceServicesResult^ result) {
@@ -222,7 +227,7 @@ void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
             }
         }
         partial(nullptr);
-    }).CHECK_TASK_ERROR(partial);
+    }).CHECK_TASK_ERROR(error_handler);
 }
 
 void WarbleGatt_Win10::disconnect() {
