@@ -118,7 +118,7 @@ private:
     BluetoothAddressType addr_type;
     Windows::Foundation::EventRegistrationToken cookie;
     unordered_map<Guid, WarbleGattChar_Win10*, Hasher, EqualFn> characteristics;
-    unordered_set<Guid, Hasher, EqualFn> services;
+    unordered_map<Guid, GattDeviceService^, Hasher, EqualFn> services;
 };
 
 WarbleGatt* warblegatt_create(int32_t nopts, const WarbleOption* opts) {
@@ -208,14 +208,17 @@ void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
         vector<task<GattCharacteristicsResult^>> find_gattchar_tasks;
         if (result->Status == GattCommunicationStatus::Success) {
             for (auto it : result->Services) {
-                services.insert(it->Uuid);
+                services.emplace(it->Uuid, it);
                 find_gattchar_tasks.push_back(create_task(it->GetCharacteristicsAsync(BluetoothCacheMode::Uncached)));
             }
 
             return when_all(begin(find_gattchar_tasks), end(find_gattchar_tasks));
         }
 
-        throw runtime_error("Failed to discover gatt services");
+        stringstream buffer;
+        buffer << "Failed to discover gatt services (status = " << static_cast<int>(result->Status) << ")";
+
+        throw runtime_error(buffer.str());
     }).then([this, partial](vector<GattCharacteristicsResult^> results) {
         for (auto it : results) {
             if (it->Status == GattCommunicationStatus::Success) {
@@ -223,7 +226,10 @@ void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
                     characteristics.emplace(it2->Uuid, new WarbleGattChar_Win10(this, it2));
                 }
             } else {
-                throw runtime_error("Failed to discover gatt characteristics");
+                stringstream buffer;
+                buffer << "Failed to discover gatt characteristics (status = " << static_cast<int>(it->Status) << ")";
+
+                throw runtime_error(buffer.str());
             }
         }
         partial(nullptr);
@@ -242,11 +248,16 @@ void WarbleGatt_Win10::cleanup(bool dispose) {
     for (auto it : characteristics) {
         delete it.second;
     }
+    for (auto it : services) {
+        delete it.second;
+    }
+
     characteristics.clear();
     services.clear();
 
     if (dispose && device != nullptr) {
         device->ConnectionStatusChanged -= cookie;
+        delete device;
         device = nullptr;
     }
 }
