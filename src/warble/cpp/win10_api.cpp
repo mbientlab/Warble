@@ -203,13 +203,13 @@ void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
     };
 
     event_set.then([this]() {
-        return create_task(device->GetGattServicesAsync());
+        return create_task(device->GetGattServicesAsync(BluetoothCacheMode::Uncached));
     }).then([this](GattDeviceServicesResult^ result) {
         vector<task<GattCharacteristicsResult^>> find_gattchar_tasks;
         if (result->Status == GattCommunicationStatus::Success) {
             for (auto it : result->Services) {
                 services.insert(it->Uuid);
-                find_gattchar_tasks.push_back(create_task(it->GetCharacteristicsAsync()));
+                find_gattchar_tasks.push_back(create_task(it->GetCharacteristicsAsync(BluetoothCacheMode::Uncached)));
             }
 
             return when_all(begin(find_gattchar_tasks), end(find_gattchar_tasks));
