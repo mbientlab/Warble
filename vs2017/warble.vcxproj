@@ -123,7 +123,7 @@
       <PreprocessorDefinitions>WARBLE_DLL_EXPORTS;API_WIN10;WIN32;_DEBUG;WARBLE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAsWinRT>true</CompileAsWinRT>
-      <AdditionalUsingDirectories>$(MSBuildProgramFiles32)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\vcpackages;$(MSBuildProgramFiles32)\Windows Kits\10\UnionMetadata\10.0.16299.0;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <AdditionalUsingDirectories>$(VCIDEInstallDir)vcpackages;$(WindowsSDK_UnionMetadataPath);%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
       <AdditionalOptions>/Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -140,7 +140,7 @@
       <PreprocessorDefinitions>WARBLE_DLL_EXPORTS;API_WIN10;_DEBUG;WARBLE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAsWinRT>true</CompileAsWinRT>
-      <AdditionalUsingDirectories>$(MSBuildProgramFiles32)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\vcpackages;$(MSBuildProgramFiles32)\Windows Kits\10\UnionMetadata\10.0.16299.0;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <AdditionalUsingDirectories>$(VCIDEInstallDir)vcpackages;$(WindowsSDK_UnionMetadataPath);%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
       <AdditionalOptions>/Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -159,7 +159,7 @@
       <PreprocessorDefinitions>WARBLE_DLL_EXPORTS;API_WIN10;WIN32;NDEBUG;WARBLE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAsWinRT>true</CompileAsWinRT>
-      <AdditionalUsingDirectories>$(MSBuildProgramFiles32)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\vcpackages;$(MSBuildProgramFiles32)\Windows Kits\10\UnionMetadata\10.0.16299.0;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <AdditionalUsingDirectories>$(VCIDEInstallDir)vcpackages;$(WindowsSDK_UnionMetadataPath);%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
       <AdditionalOptions>/Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -180,7 +180,7 @@
       <PreprocessorDefinitions>WARBLE_DLL_EXPORTS;API_WIN10;NDEBUG;WARBLE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAsWinRT>true</CompileAsWinRT>
-      <AdditionalUsingDirectories>$(MSBuildProgramFiles32)\Microsoft Visual Studio\2017\Community\Common7\IDE\VC\vcpackages;$(MSBuildProgramFiles32)\Windows Kits\10\UnionMetadata\10.0.16299.0;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <AdditionalUsingDirectories>$(VCIDEInstallDir)vcpackages;$(WindowsSDK_UnionMetadataPath);%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
       <AdditionalOptions>/Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
