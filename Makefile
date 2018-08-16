@@ -41,19 +41,22 @@ else
 endif
 
 ifeq ($(MACHINE),x86)
-    CXXFLAGS+=-m32
     ARCH=-m32
     INSTALL_LIB?=lib
 else ifeq ($(MACHINE),x64)
-    CXXFLAGS+=-m64
     ARCH=-m64
     INSTALL_LIB?=lib64
 else ifeq ($(MACHINE),arm)
-    CXXFLAGS+=-marm
     ARCH=-marm
     INSTALL_LIB?=lib
 else
     $(error Unrecognized "MACHINE" value, use 'x86', 'x64', or 'arm')
+endif
+
+ifndef NO_MULTILIB
+    CXXFLAGS+=$(ARCH)
+else
+    ARCH=
 endif
 
 LIB_SO_NAME:=lib$(APP_NAME).$(EXTENSION)
@@ -112,6 +115,7 @@ clean:
 
 cleanest: clean
 	make clean -C $(DEPS_BLEPP)
+	rm $(DEPS_BLEPP)/Makefile
 
 doc:
 	rm -Rf $(DOC_DIR)
