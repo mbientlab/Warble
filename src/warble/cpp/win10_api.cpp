@@ -216,7 +216,7 @@ void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
         }
 
         stringstream buffer;
-        buffer << "Failed to discover gatt services (status = " << static_cast<int>(result->Status) << ")";
+        buffer << WARBLE_DISCOVER_SERVICES_ERROR << " (status = " << static_cast<int>(result->Status) << ")";
 
         throw runtime_error(buffer.str());
     }).then([this, partial](vector<GattCharacteristicsResult^> results) {
@@ -227,7 +227,7 @@ void WarbleGatt_Win10::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
                 }
             } else {
                 stringstream buffer;
-                buffer << "Failed to discover gatt characteristics (status = " << static_cast<int>(it->Status) << ")";
+                buffer << WARBLE_DISCOVER_CHARACTERISTICS_ERROR << " (status = " << static_cast<int>(it->Status) << ")";
 
                 throw runtime_error(buffer.str());
             }

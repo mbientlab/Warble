@@ -118,17 +118,8 @@ WarbleGatt* warblegatt_create(std::int32_t nopts, const WarbleOption* opts) {
 }
 
 WarbleGatt_Blepp::WarbleGatt_Blepp(const char* mac, const char* hci_mac, bool public_addr) : 
-        mac(mac), hci_mac(hci_mac), on_disconnect_context(nullptr), on_disconnect_handler(nullptr), active_char(nullptr), public_addr(public_addr), connected(false), local_dc(false) {
-    gatt.cb_connected = [this]() {
-        connected = true;
-        gatt.read_primary_services();
-    };
-    gatt.cb_find_characteristics = [this]() {
-        gatt.get_client_characteristic_configuration();
-    };
-    gatt.cb_services_read = [this]() {
-        gatt.find_all_characteristics();
-    };
+        mac(mac), hci_mac(hci_mac), on_disconnect_context(nullptr), on_disconnect_handler(nullptr), 
+        active_char(nullptr), public_addr(public_addr), connected(false), local_dc(false) {
     gatt.cb_write_response = [this]() {
         active_char->gatt_op_error_handler = nullptr;
         active_char = nullptr;
@@ -149,13 +140,36 @@ void WarbleGatt_Blepp::clear_characteristics() {
     characteristics.clear();
 }
 
+#include <iostream>
 void WarbleGatt_Blepp::connect_async(void* context, FnVoid_VoidP_WarbleGattP_CharP handler) {
     thread th([this, context, handler]() {
-        local_dc = false;
+        enum State {
+            DONE,
+            CONNECTING,
+            DISCOVER_SERVICE,
+            DISCOVER_CHAR
+        };
+        State connState = CONNECTING;
 
         bool terminate = false;
         int dc_code;
+        local_dc = false;
 
+        gatt.cb_connected = [this, &connState]() {
+            cout << "Connected" << endl;
+            connected = true;
+            connState = DISCOVER_SERVICE;
+            gatt.read_primary_services();
+        };
+        gatt.cb_services_read = [this, &connState]() {
+            cout << "Services disconvered" << endl;
+            connState = DISCOVER_CHAR;
+            gatt.find_all_characteristics();
+        };
+        gatt.cb_find_characteristics = [this, &connState]() {
+            cout << "Characteristics discovered" << endl;
+            gatt.get_client_characteristic_configuration();
+        };
         gatt.cb_disconnected = [this, &terminate, &dc_code](BLEGATTStateMachine::Disconnect d) {
             if (active_char != nullptr && active_char->gatt_op_error_handler != nullptr) {
                 active_char->gatt_op_error_handler(BLEGATTStateMachine::get_disconnect_string(d));
@@ -164,7 +178,8 @@ void WarbleGatt_Blepp::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
             dc_code = d.error_code;
             terminate = true;
         };
-        gatt.cb_get_client_characteristic_configuration = [this, context, handler]() {
+        gatt.cb_get_client_characteristic_configuration = [this, context, handler, &connState]() {
+            cout << "Descriptors found" << endl;
             services.clear();
             clear_characteristics();
 
@@ -175,7 +190,10 @@ void WarbleGatt_Blepp::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
                 }
             }
 
-            handler(context, this, nullptr);
+            if (connState != DONE) {
+                connState = DONE;
+                handler(context, this, nullptr);
+            }
         };
 
         auto socket_select = [this, &terminate](timeval* timeout) {
@@ -209,9 +227,21 @@ void WarbleGatt_Blepp::connect_async(void* context, FnVoid_VoidP_WarbleGattP_Cha
             gatt.close();
             handler(context, this, status == 0 ? WARBLE_CONNECT_TIMEOUT : WARBLE_GATT_ERROR);
         } else {
-            while(!local_dc && !terminate && socket_select(nullptr) > 0) {
+            while(!local_dc && !terminate && (status = socket_select(nullptr)) > 0) {
             }
-            
+
+            if (connState != DONE) {
+                stringstream buffer;
+                if (connState == DISCOVER_SERVICE) {
+                    buffer << WARBLE_DISCOVER_SERVICES_ERROR;
+                } else if (connState == DISCOVER_CHAR) {
+                    buffer << WARBLE_DISCOVER_CHARACTERISTICS_ERROR;
+                }
+                buffer << " (status = " << status << ")";
+
+                connState = DONE;
+                handler(context, this, buffer.str().c_str());
+            }
             if (!local_dc) {
                 gatt.cb_disconnected = [](BLEGATTStateMachine::Disconnect d) { };
             }

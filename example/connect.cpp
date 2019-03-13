@@ -2,23 +2,15 @@
 #include "warble/warble.h"
 
 #include <chrono>
-#include <functional>
+#include <future>
 #include <iostream>
-#include <iomanip>
-#include <queue>
+#include <stdexcept>
 #include <thread>
 #include <utility>
-#include <vector>
-
-#include <csignal>
-#include <condition_variable> // std::condition_variable
-#include <mutex>              // std::mutex, std::unique_lock
 
 using namespace std;
 using namespace std::chrono;
 using namespace std::chrono_literals;
-
-static condition_variable cv;
 
 int main(int argc, char** argv) {
     if (argc < 2) {
@@ -26,10 +18,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    mutex m;
-    unique_lock<std::mutex> lock(m);
-
-#ifdef WIN32
+#ifdef _WINDOWS
     auto gatt = warble_gatt_create(argv[1]);
 #else
     // Setting hci mac only supported on Linux
@@ -44,27 +33,31 @@ int main(int argc, char** argv) {
     auto gatt = warble_gatt_create_with_options(argc - 1, config_options);
 #endif
     for(int i = 0; i < 3; i++) {
+        promise<void> connect_task;
         cout << "Connecting to " << argv[1] << endl;
-        warble_gatt_connect_async(gatt, nullptr, [](void* context, WarbleGatt* caller, const char* value) {
+        warble_gatt_connect_async(gatt, &connect_task, [](void* context, WarbleGatt* caller, const char* value) {
+            auto task = (promise<void>*) context;
+
             if (value != nullptr) {
-                cout << "Error: " << value << endl;
+                cout << "You done fucked up" << endl;
+                task->set_exception(make_exception_ptr(runtime_error(value)));
             } else {
                 cout << "Am I connected? " << warble_gatt_is_connected(caller) << endl;
 
                 this_thread::sleep_for(5s);
+                task->set_value();
             }
-            cv.notify_all();
         });
-        cv.wait(lock);
+        connect_task.get_future().get();
 
+        promise<int32_t> dc_task;
         cout << "Disconnecting..." << endl;
-        warble_gatt_on_disconnect(gatt, nullptr, [](void* context, WarbleGatt* caller, int32_t status) {
-            cout << "disconnected, status = " << status << endl;
-            cv.notify_all();
+        warble_gatt_on_disconnect(gatt, &dc_task, [](void* context, WarbleGatt* caller, int32_t status) {
+            ((promise<int32_t>*) context)->set_value(status);
         });
         warble_gatt_disconnect(gatt);
+        cout << "disconnected, status = " << dc_task.get_future().get() << endl;
         
-        cv.wait(lock, [gatt] {return !warble_gatt_is_connected(gatt); });
         cout << "Am I connected? " << warble_gatt_is_connected(gatt) << endl;
     }
     return 0;
