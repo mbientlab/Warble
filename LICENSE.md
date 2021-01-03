@@ -17,5 +17,4 @@ THEORY ANY DIRECT OR INDIRECT DAMAGES OR EXPENSES INCLUDING BUT NOT LIMITED TO A
 PUNITIVE OR CONSEQUENTIAL DAMAGES, LOST PROFITS OR LOST DATA, COST OF PROCUREMENT OF SUBSTITUTE GOODS, TECHNOLOGY, 
 SERVICES, OR ANY CLAIMS BY THIRD PARTIES (INCLUDING BUT NOT LIMITED TO ANY DEFENSE THEREOF), OR OTHER SIMILAR COSTS.
 
-Should you have any questions regarding your right to use this Software, contact MbientLab via email: 
-hello@mbientlab.com.
+Should you have any questions regarding your right to use this Software, contact MbientLab via email: hello@mbientlab.com.
