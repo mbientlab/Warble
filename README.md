@@ -6,8 +6,7 @@ Developers can use this library to connect to Bluetooth LE devices, read and wri
 notifications.
 
 # Build
-Beacuse this library is designed to work across two OSes, there will be different dependencies and build steps depending on the 
-target OS.
+Because this library is designed to work across two OSes, there will be different dependencies and build steps depending on the target OS.
 
 Regardless of the platform, the build relies on Git tag information, so you must clone the code instead of doing a source download.  
 
