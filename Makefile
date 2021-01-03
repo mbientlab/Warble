@@ -3,9 +3,9 @@
 .PHONY: build clean doc publish install
 
 VERSION_MK=version.mk
-#ifndef SKIP_VERSION
-#    $(shell ./bin/generate_version.sh $(VERSION_MK))
-#endif
+ifndef SKIP_VERSION
+    $(shell ./bin/generate_version.sh $(VERSION_MK))
+endif
 
 include config.mk
 include $(VERSION_MK)
