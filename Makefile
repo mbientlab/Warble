@@ -3,9 +3,9 @@
 .PHONY: build clean doc publish install
 
 VERSION_MK=version.mk
-ifndef SKIP_VERSION
-    $(shell ./bin/generate_version.sh $(VERSION_MK))
-endif
+#ifndef SKIP_VERSION
+#    $(shell ./bin/generate_version.sh $(VERSION_MK))
+#endif
 
 include config.mk
 include $(VERSION_MK)
@@ -40,18 +40,18 @@ else
     LD_FLAGS:=-dynamiclib $(LD_FLAGS)-install_name
 endif
 
-ifeq ($(MACHINE),x86)
-    ARCH=-m32
-    INSTALL_LIB?=lib
-else ifeq ($(MACHINE),x64)
-    ARCH=-m64
-    INSTALL_LIB?=lib64
-else ifeq ($(MACHINE),arm)
-    ARCH=-marm
-    INSTALL_LIB?=lib
-else
-    $(error Unrecognized "MACHINE" value, use 'x86', 'x64', or 'arm')
-endif
+#ifeq ($(MACHINE),x86)
+#    ARCH=-m32
+#    INSTALL_LIB?=lib
+#else ifeq ($(MACHINE),x64)
+#    ARCH=-m64
+#    INSTALL_LIB?=lib64
+#else ifeq ($(MACHINE),arm)
+#    ARCH=-marm
+#    INSTALL_LIB?=lib
+#else
+#    $(error Unrecognized "MACHINE" value, use 'x86', 'x64', or 'arm')
+#endif
 
 ifndef NO_MULTILIB
     CXXFLAGS+=$(ARCH)
