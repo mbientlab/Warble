@@ -37,5 +37,13 @@ git submodule update --init
 make
 ```
 
+## Windows 10
+Install Visual Studio 2017 along with the FCU Windows 10 SDK (10.0.17134.0).  You can build the solution in VS2017 or with MSBuild.
+
+```bat
+cd vs2017
+MSBuild.exe warble.sln
+```
+
 # Examples
 Example scripts showcasing how to use the library are in the [example](https://github.com/mbientlab/warble/blob/master/example) folder.  
