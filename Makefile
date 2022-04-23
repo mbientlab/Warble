@@ -49,8 +49,11 @@ else ifeq ($(MACHINE),x64)
 else ifeq ($(MACHINE),arm)
     ARCH=-marm
     INSTALL_LIB?=lib
+else ifeq ($(MACHINE),aarch64)
+    ARCH=-march=native
+    INSTALL_LIB?=lib
 else
-    $(error Unrecognized "MACHINE" value, use 'x86', 'x64', or 'arm')
+    $(error Unrecognized "MACHINE" value, use 'x86', 'x64', 'aarch64', or 'arm')
 endif
 
 ifndef NO_MULTILIB
